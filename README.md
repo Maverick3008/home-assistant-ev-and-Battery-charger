@@ -40,7 +40,7 @@ planned_end = next_daily_ready_by_time - buffer_minutes
 planned_start = planned_end - duration_minutes
 ```
 
-Example with your Cupra values:
+Example with car values:
 
 ```text
 battery_size_kwh = 19.7
