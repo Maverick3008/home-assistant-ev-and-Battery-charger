@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{name}",
+    "flow_title": "EV and Battery Charger",
     "step": {
       "user": {
         "title": "EV and Battery Charger",
@@ -28,7 +28,12 @@
       }
     },
     "error": {
-      "empty_name": "Please enter a charger name."
+      "empty_name": "Please enter a name.",
+      "invalid_entity": "Please enter a valid entity, for example sensor.garage_homeassistant_batterie.",
+      "invalid_time": "Please enter the time as HH:MM or HH:MM:SS, for example 06:00.",
+      "must_be_positive": "The value must be greater than 0.",
+      "invalid_efficiency": "Charging efficiency must be greater than 0 and no more than 1, for example 0.93.",
+      "must_not_be_negative": "The value must not be negative."
     },
     "abort": {
       "already_configured": "This charger is already configured."
@@ -60,6 +65,14 @@
           "buffer_minutes": "The planned charging end is this many minutes before the ready-by time. Default: 30 minutes."
         }
       }
+    },
+    "error": {
+      "empty_name": "Please enter a name.",
+      "invalid_entity": "Please enter a valid entity, for example sensor.garage_homeassistant_batterie.",
+      "invalid_time": "Please enter the time as HH:MM or HH:MM:SS, for example 06:00.",
+      "must_be_positive": "The value must be greater than 0.",
+      "invalid_efficiency": "Charging efficiency must be greater than 0 and no more than 1, for example 0.93.",
+      "must_not_be_negative": "The value must not be negative."
     }
   },
   "entity": {

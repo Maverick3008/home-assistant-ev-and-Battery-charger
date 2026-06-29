@@ -40,7 +40,7 @@ planned_end = next_daily_ready_by_time - buffer_minutes
 planned_start = planned_end - duration_minutes
 ```
 
-Example with car values:
+Example with your Cupra values:
 
 ```text
 battery_size_kwh = 19.7
@@ -241,3 +241,7 @@ Passe die Entity-IDs an deine Umgebung an.
 ## Icons / Logo
 
 The repository includes `icon.png`, `logo.png` and `icon.svg` for GitHub/HACS branding. Die Entitäts-Icons sind zusätzlich über `icons.json` definiert.
+
+## Version 1.0.3 compatibility note
+
+The configuration form now uses simple text and number fields for maximum Home Assistant compatibility. Enter entity IDs manually, for example `sensor.garage_homeassistant_batterie` and `input_number.soc_ladung_nach_kalender`.

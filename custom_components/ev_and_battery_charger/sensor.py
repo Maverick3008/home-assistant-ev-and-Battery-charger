@@ -70,14 +70,14 @@ class ChargeCalculation:
 
 
 @dataclass(frozen=True, kw_only=True)
-class EVChargePlannerSensorEntityDescription(SensorEntityDescription):
+class EVAndBatteryChargerSensorEntityDescription(SensorEntityDescription):
     """Describe an EV and Battery Charger sensor."""
 
     value_key: str
 
 
-SENSOR_DESCRIPTIONS: tuple[EVChargePlannerSensorEntityDescription, ...] = (
-    EVChargePlannerSensorEntityDescription(
+SENSOR_DESCRIPTIONS: tuple[EVAndBatteryChargerSensorEntityDescription, ...] = (
+    EVAndBatteryChargerSensorEntityDescription(
         key="charge_duration_minutes",
         translation_key="charge_duration_minutes",
         value_key="duration_minutes",
@@ -85,19 +85,19 @@ SENSOR_DESCRIPTIONS: tuple[EVChargePlannerSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    EVChargePlannerSensorEntityDescription(
+    EVAndBatteryChargerSensorEntityDescription(
         key="planned_charge_start",
         translation_key="planned_charge_start",
         value_key="planned_start",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
-    EVChargePlannerSensorEntityDescription(
+    EVAndBatteryChargerSensorEntityDescription(
         key="planned_charge_end",
         translation_key="planned_charge_end",
         value_key="planned_end",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
-    EVChargePlannerSensorEntityDescription(
+    EVAndBatteryChargerSensorEntityDescription(
         key="energy_needed",
         translation_key="energy_needed",
         value_key="energy_needed_kwh",
@@ -106,7 +106,7 @@ SENSOR_DESCRIPTIONS: tuple[EVChargePlannerSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
     ),
-    EVChargePlannerSensorEntityDescription(
+    EVAndBatteryChargerSensorEntityDescription(
         key="charge_plan_status",
         translation_key="charge_plan_status",
         value_key="status",
@@ -123,14 +123,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up EV and Battery Charger sensors from a config entry."""
-    calculator = EVChargePlannerCalculator(hass, entry)
+    calculator = EVAndBatteryChargerCalculator(hass, entry)
     async_add_entities(
-        EVChargePlannerSensor(entry, calculator, description)
+        EVAndBatteryChargerSensor(entry, calculator, description)
         for description in SENSOR_DESCRIPTIONS
     )
 
 
-class EVChargePlannerCalculator:
+class EVAndBatteryChargerCalculator:
     """Calculate charging duration and daily charging window."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -233,17 +233,17 @@ class EVChargePlannerCalculator:
         )
 
 
-class EVChargePlannerSensor(SensorEntity):
+class EVAndBatteryChargerSensor(SensorEntity):
     """Representation of an EV and Battery Charger sensor."""
 
-    entity_description: EVChargePlannerSensorEntityDescription
+    entity_description: EVAndBatteryChargerSensorEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
         entry: ConfigEntry,
-        calculator: EVChargePlannerCalculator,
-        description: EVChargePlannerSensorEntityDescription,
+        calculator: EVAndBatteryChargerCalculator,
+        description: EVAndBatteryChargerSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         self.entry = entry

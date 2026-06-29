@@ -1,4 +1,9 @@
 # Changelog
+## 1.0.3
+
+- Fixed a possible Home Assistant config flow `400: Bad Request` error by replacing advanced form selectors with robust plain input fields.
+- Added additional validation messages for entity IDs, time format, positive values and efficiency.
+- Set a static config flow title for better compatibility.
 
 ## 1.0.2
 

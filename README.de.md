@@ -28,3 +28,7 @@ Kopiere `custom_components/ev_and_battery_charger` in deinen Home-Assistant-Ordn
 ## Icons und Logo
 
 Das Repository enthält `icon.png`, `logo.png` und `icon.svg` für GitHub/HACS-Branding. Die Entitäts-Icons sind zusätzlich über `icons.json` definiert.
+
+## Hinweis zu Version 1.0.3
+
+Der Konfigurationsdialog nutzt jetzt einfache Text- und Zahlenfelder, damit er in möglichst vielen Home-Assistant-Versionen zuverlässig lädt. Gib die Entitäts-IDs manuell ein, zum Beispiel `sensor.garage_homeassistant_batterie` und `input_number.soc_ladung_nach_kalender`.

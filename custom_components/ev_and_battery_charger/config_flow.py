@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
-from homeassistant.helpers import selector
 from homeassistant.util import slugify
 
 from .const import (
@@ -29,24 +28,6 @@ from .const import (
 )
 
 
-def _number_selector(
-    minimum: float,
-    maximum: float,
-    step: float,
-    unit: str | None = None,
-) -> selector.NumberSelector:
-    """Create a boxed number selector."""
-    return selector.NumberSelector(
-        selector.NumberSelectorConfig(
-            min=minimum,
-            max=maximum,
-            step=step,
-            mode=selector.NumberSelectorMode.BOX,
-            unit_of_measurement=unit,
-        )
-    )
-
-
 def _required_key(key: str, default: Any | None = None) -> vol.Required:
     """Return a required schema key, optionally with a default value."""
     if default is None:
@@ -55,7 +36,12 @@ def _required_key(key: str, default: Any | None = None) -> vol.Required:
 
 
 def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
-    """Build the config/options schema."""
+    """Build the config/options schema.
+
+    This intentionally uses plain schema fields instead of advanced selectors.
+    That keeps the config flow compatible with more Home Assistant versions and
+    avoids frontend 400 errors caused by selector serialization differences.
+    """
     defaults = defaults or {}
     return vol.Schema(
         {
@@ -66,40 +52,80 @@ def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
             _required_key(
                 CONF_SOC_SENSOR,
                 defaults.get(CONF_SOC_SENSOR),
-            ): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain=["sensor", "number", "input_number"])
-            ),
+            ): str,
             _required_key(
                 CONF_TARGET_SOC_ENTITY,
                 defaults.get(CONF_TARGET_SOC_ENTITY),
-            ): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain=["input_number", "number", "sensor"])
-            ),
+            ): str,
             vol.Required(
                 CONF_TARGET_TIME,
                 default=defaults.get(CONF_TARGET_TIME, DEFAULT_TARGET_TIME),
-            ): selector.TimeSelector(),
+            ): str,
             vol.Required(
                 CONF_BATTERY_SIZE_KWH,
                 default=defaults.get(CONF_BATTERY_SIZE_KWH, DEFAULT_BATTERY_SIZE_KWH),
-            ): _number_selector(1, 300, 0.1, "kWh"),
+            ): vol.Coerce(float),
             vol.Required(
                 CONF_CHARGE_POWER_KW,
                 default=defaults.get(CONF_CHARGE_POWER_KW, DEFAULT_CHARGE_POWER_KW),
-            ): _number_selector(0.1, 350, 0.1, "kW"),
+            ): vol.Coerce(float),
             vol.Required(
                 CONF_EFFICIENCY,
                 default=defaults.get(CONF_EFFICIENCY, DEFAULT_EFFICIENCY),
-            ): _number_selector(0.5, 1.0, 0.01),
+            ): vol.Coerce(float),
             vol.Required(
                 CONF_BUFFER_MINUTES,
                 default=defaults.get(CONF_BUFFER_MINUTES, DEFAULT_BUFFER_MINUTES),
-            ): _number_selector(0, 240, 1, "min"),
+            ): vol.Coerce(int),
         }
     )
 
 
-class EVChargePlannerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+def _validate_input(user_input: dict[str, Any]) -> dict[str, str]:
+    """Validate user input and return config flow errors."""
+    errors: dict[str, str] = {}
+
+    name = user_input.get(CONF_NAME, "").strip()
+    if not name:
+        errors[CONF_NAME] = "empty_name"
+
+    soc_sensor = user_input.get(CONF_SOC_SENSOR, "").strip()
+    if "." not in soc_sensor:
+        errors[CONF_SOC_SENSOR] = "invalid_entity"
+
+    target_soc_entity = user_input.get(CONF_TARGET_SOC_ENTITY, "").strip()
+    if "." not in target_soc_entity:
+        errors[CONF_TARGET_SOC_ENTITY] = "invalid_entity"
+
+    target_time = user_input.get(CONF_TARGET_TIME, "").strip()
+    try:
+        parts = [int(part) for part in target_time.split(":")]
+        if len(parts) not in (2, 3):
+            raise ValueError
+        hour, minute = parts[0], parts[1]
+        second = parts[2] if len(parts) == 3 else 0
+        if not (0 <= hour <= 23 and 0 <= minute <= 59 and 0 <= second <= 59):
+            raise ValueError
+    except (TypeError, ValueError):
+        errors[CONF_TARGET_TIME] = "invalid_time"
+
+    if float(user_input.get(CONF_BATTERY_SIZE_KWH, 0)) <= 0:
+        errors[CONF_BATTERY_SIZE_KWH] = "must_be_positive"
+
+    if float(user_input.get(CONF_CHARGE_POWER_KW, 0)) <= 0:
+        errors[CONF_CHARGE_POWER_KW] = "must_be_positive"
+
+    efficiency = float(user_input.get(CONF_EFFICIENCY, 0))
+    if not (0 < efficiency <= 1):
+        errors[CONF_EFFICIENCY] = "invalid_efficiency"
+
+    if int(user_input.get(CONF_BUFFER_MINUTES, -1)) < 0:
+        errors[CONF_BUFFER_MINUTES] = "must_not_be_negative"
+
+    return errors
+
+
+class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for EV and Battery Charger."""
 
     VERSION = 1
@@ -111,14 +137,17 @@ class EVChargePlannerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            name = user_input[CONF_NAME].strip()
-            if not name:
-                errors[CONF_NAME] = "empty_name"
-            else:
-                await self.async_set_unique_id(slugify(name))
+            # Normalize simple text fields.
+            user_input[CONF_NAME] = user_input[CONF_NAME].strip()
+            user_input[CONF_SOC_SENSOR] = user_input[CONF_SOC_SENSOR].strip()
+            user_input[CONF_TARGET_SOC_ENTITY] = user_input[CONF_TARGET_SOC_ENTITY].strip()
+            user_input[CONF_TARGET_TIME] = user_input[CONF_TARGET_TIME].strip()
+
+            errors = _validate_input(user_input)
+            if not errors:
+                await self.async_set_unique_id(slugify(user_input[CONF_NAME]))
                 self._abort_if_unique_id_configured()
-                user_input[CONF_NAME] = name
-                return self.async_create_entry(title=name, data=user_input)
+                return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -130,23 +159,33 @@ class EVChargePlannerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> EVChargePlannerOptionsFlow:
+    ) -> EVAndBatteryChargerOptionsFlow:
         """Create the options flow."""
-        return EVChargePlannerOptionsFlow()
+        return EVAndBatteryChargerOptionsFlow()
 
 
-class EVChargePlannerOptionsFlow(config_entries.OptionsFlow):
+class EVAndBatteryChargerOptionsFlow(config_entries.OptionsFlow):
     """Handle EV and Battery Charger options."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Manage the options."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            user_input[CONF_NAME] = user_input[CONF_NAME].strip()
+            user_input[CONF_SOC_SENSOR] = user_input[CONF_SOC_SENSOR].strip()
+            user_input[CONF_TARGET_SOC_ENTITY] = user_input[CONF_TARGET_SOC_ENTITY].strip()
+            user_input[CONF_TARGET_TIME] = user_input[CONF_TARGET_TIME].strip()
+
+            errors = _validate_input(user_input)
+            if not errors:
+                return self.async_create_entry(title="", data=user_input)
 
         current = {**self.config_entry.data, **self.config_entry.options}
         return self.async_show_form(
             step_id="init",
-            data_schema=_build_schema(current),
+            data_schema=_build_schema(user_input or current),
+            errors=errors,
         )

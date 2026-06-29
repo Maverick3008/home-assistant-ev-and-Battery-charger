@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{name}",
+    "flow_title": "EV and Battery Charger",
     "step": {
       "user": {
         "title": "EV and Battery Charger",
@@ -28,7 +28,12 @@
       }
     },
     "error": {
-      "empty_name": "Bitte gib eine Bezeichnung ein."
+      "empty_name": "Bitte gib eine Bezeichnung ein.",
+      "invalid_entity": "Bitte gib eine gültige Entität ein, zum Beispiel sensor.garage_homeassistant_batterie.",
+      "invalid_time": "Bitte gib die Uhrzeit im Format HH:MM oder HH:MM:SS ein, zum Beispiel 06:00.",
+      "must_be_positive": "Der Wert muss größer als 0 sein.",
+      "invalid_efficiency": "Die Ladeeffizienz muss größer als 0 und maximal 1 sein, zum Beispiel 0.93.",
+      "must_not_be_negative": "Der Wert darf nicht negativ sein."
     },
     "abort": {
       "already_configured": "Diese Bezeichnung ist bereits eingerichtet."
@@ -60,6 +65,14 @@
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten."
         }
       }
+    },
+    "error": {
+      "empty_name": "Bitte gib eine Bezeichnung ein.",
+      "invalid_entity": "Bitte gib eine gültige Entität ein, zum Beispiel sensor.garage_homeassistant_batterie.",
+      "invalid_time": "Bitte gib die Uhrzeit im Format HH:MM oder HH:MM:SS ein, zum Beispiel 06:00.",
+      "must_be_positive": "Der Wert muss größer als 0 sein.",
+      "invalid_efficiency": "Die Ladeeffizienz muss größer als 0 und maximal 1 sein, zum Beispiel 0.93.",
+      "must_not_be_negative": "Der Wert darf nicht negativ sein."
     }
   },
   "entity": {
