@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "charge_duration_minutes": {
+        "default": "mdi:timer-outline"
+      },
+      "planned_charge_start": {
+        "default": "mdi:clock-start"
+      },
+      "planned_charge_end": {
+        "default": "mdi:clock-end"
+      },
+      "energy_needed": {
+        "default": "mdi:battery-charging-medium"
+      },
+      "charge_plan_status": {
+        "default": "mdi:calendar-clock"
+      }
+    }
+  }
+}

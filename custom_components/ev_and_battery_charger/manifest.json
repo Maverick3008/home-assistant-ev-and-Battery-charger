@@ -1,0 +1,13 @@
+{
+  "domain": "ev_and_battery_charger",
+  "name": "EV and Battery Charger",
+  "codeowners": [
+    "@Maverick3008"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/Maverick3008/home-assistant-ev-and-battery-charger",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/Maverick3008/home-assistant-ev-and-battery-charger/issues",
+  "requirements": [],
+  "version": "1.0.2"
+}

@@ -1,0 +1,90 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "EV and Battery Charger",
+        "description": "Calculate the required charging duration, planned start time and planned end time for an EV, plug-in hybrid or battery storage system based on the current battery level, a target charge helper and a daily ready-by time.",
+        "data": {
+          "name": "Charger name",
+          "soc_sensor": "Current battery level sensor",
+          "target_soc_entity": "Target charge helper",
+          "target_time": "Daily ready-by time",
+          "battery_size_kwh": "Battery size",
+          "charge_power_kw": "Charging power",
+          "efficiency": "Charging efficiency factor",
+          "buffer_minutes": "Buffer before ready-by time"
+        },
+        "data_description": {
+          "name": "Example: Cupra Leon or Home Battery",
+          "soc_sensor": "Entity that reports the current state of charge in percent.",
+          "target_soc_entity": "Usually an input_number helper with the desired target charge in percent.",
+          "target_time": "The vehicle should be ready by this time every day.",
+          "battery_size_kwh": "Usable battery capacity in kWh.",
+          "charge_power_kw": "Expected charging power in kW.",
+          "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
+          "buffer_minutes": "The planned charging end is this many minutes before the ready-by time. Default: 30 minutes."
+        }
+      }
+    },
+    "error": {
+      "empty_name": "Please enter a charger name."
+    },
+    "abort": {
+      "already_configured": "This charger is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "EV and Battery Charger options",
+        "description": "Adjust the entities and charging parameters used for the charging plan.",
+        "data": {
+          "name": "Charger name",
+          "soc_sensor": "Current battery level sensor",
+          "target_soc_entity": "Target charge helper",
+          "target_time": "Daily ready-by time",
+          "battery_size_kwh": "Battery size",
+          "charge_power_kw": "Charging power",
+          "efficiency": "Charging efficiency factor",
+          "buffer_minutes": "Buffer before ready-by time"
+        },
+        "data_description": {
+          "name": "Example: Cupra Leon or Home Battery",
+          "soc_sensor": "Entity that reports the current state of charge in percent.",
+          "target_soc_entity": "Usually an input_number helper with the desired target charge in percent.",
+          "target_time": "The vehicle should be ready by this time every day.",
+          "battery_size_kwh": "Usable battery capacity in kWh.",
+          "charge_power_kw": "Expected charging power in kW.",
+          "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
+          "buffer_minutes": "The planned charging end is this many minutes before the ready-by time. Default: 30 minutes."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "charge_duration_minutes": {
+        "name": "Required charge duration"
+      },
+      "planned_charge_start": {
+        "name": "Planned charge start"
+      },
+      "planned_charge_end": {
+        "name": "Planned charge end"
+      },
+      "energy_needed": {
+        "name": "Energy needed"
+      },
+      "charge_plan_status": {
+        "name": "Charge plan status",
+        "state": {
+          "not_needed": "Not needed",
+          "waiting": "Waiting",
+          "charging_window": "Charging window",
+          "late": "Late"
+        }
+      }
+    }
+  }
+}

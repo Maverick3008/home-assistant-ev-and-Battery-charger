@@ -1,0 +1,90 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "title": "EV and Battery Charger",
+        "description": "Berechnet die benötigte Ladedauer, den geplanten Ladestart und das geplante Ladeende für ein E-Auto, Plug-in-Hybrid-Fahrzeug oder einen Batteriespeicher anhand des aktuellen Akkustands, eines Ziel-Ladestand-Helfers und einer täglichen Fertig-Uhrzeit.",
+        "data": {
+          "name": "Bezeichnung",
+          "soc_sensor": "Sensor für aktuellen Akkustand",
+          "target_soc_entity": "Helper für Ziel-Ladestand",
+          "target_time": "Tägliche Fertig-Uhrzeit",
+          "battery_size_kwh": "Batteriegröße",
+          "charge_power_kw": "Ladeleistung",
+          "efficiency": "Ladeeffizienz-Faktor",
+          "buffer_minutes": "Puffer vor der Fertig-Uhrzeit"
+        },
+        "data_description": {
+          "name": "Beispiel: Cupra Leon oder Hausakku",
+          "soc_sensor": "Entität, die den aktuellen Ladestand in Prozent liefert.",
+          "target_soc_entity": "Normalerweise ein input_number-Helfer mit dem gewünschten Ziel-Ladestand in Prozent.",
+          "target_time": "Zu dieser Uhrzeit soll das Fahrzeug jeden Tag fertig geladen sein.",
+          "battery_size_kwh": "Nutzbare Batteriekapazität in kWh.",
+          "charge_power_kw": "Erwartete Ladeleistung in kW.",
+          "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
+          "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten."
+        }
+      }
+    },
+    "error": {
+      "empty_name": "Bitte gib eine Bezeichnung ein."
+    },
+    "abort": {
+      "already_configured": "Diese Bezeichnung ist bereits eingerichtet."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Optionen für EV and Battery Charger",
+        "description": "Passe die Entitäten und Ladeparameter für den Ladeplan an.",
+        "data": {
+          "name": "Bezeichnung",
+          "soc_sensor": "Sensor für aktuellen Akkustand",
+          "target_soc_entity": "Helper für Ziel-Ladestand",
+          "target_time": "Tägliche Fertig-Uhrzeit",
+          "battery_size_kwh": "Batteriegröße",
+          "charge_power_kw": "Ladeleistung",
+          "efficiency": "Ladeeffizienz-Faktor",
+          "buffer_minutes": "Puffer vor der Fertig-Uhrzeit"
+        },
+        "data_description": {
+          "name": "Beispiel: Cupra Leon oder Hausakku",
+          "soc_sensor": "Entität, die den aktuellen Ladestand in Prozent liefert.",
+          "target_soc_entity": "Normalerweise ein input_number-Helfer mit dem gewünschten Ziel-Ladestand in Prozent.",
+          "target_time": "Zu dieser Uhrzeit soll das Fahrzeug jeden Tag fertig geladen sein.",
+          "battery_size_kwh": "Nutzbare Batteriekapazität in kWh.",
+          "charge_power_kw": "Erwartete Ladeleistung in kW.",
+          "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
+          "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "charge_duration_minutes": {
+        "name": "Benötigte Ladedauer"
+      },
+      "planned_charge_start": {
+        "name": "Geplanter Ladestart"
+      },
+      "planned_charge_end": {
+        "name": "Geplantes Ladeende"
+      },
+      "energy_needed": {
+        "name": "Benötigte Energie"
+      },
+      "charge_plan_status": {
+        "name": "Ladeplan Status",
+        "state": {
+          "not_needed": "Nicht nötig",
+          "waiting": "Wartet",
+          "charging_window": "Ladefenster",
+          "late": "Verspätet"
+        }
+      }
+    }
+  }
+}
