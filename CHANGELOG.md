@@ -1,11 +1,23 @@
+# Changelog
+
+## 1.0.7
+
+- Added configurable target source priority.
+- You can now choose whether the calendar or the daily overnight ready-by time is used first.
+- Added a target source priority sensor and translations.
+
+## 1.0.6
+
+- Made the existing configuration/options flow more robust.
+- Added an explicit reconfigure flow for already configured entries.
+- Added safer number validation to prevent the configuration dialog from hanging on invalid values.
+
 ## 1.0.5
 
 - Added optional Home Assistant calendar support.
 - The next calendar event can now be used as the ready-by time.
 - Added target ready time, target source and next calendar event sensors.
 - Updated German and English documentation.
-
-# Changelog
 
 ## 1.0.4
 
@@ -35,10 +47,3 @@
 - Config flow setup.
 - Sensors for required charge duration, planned charge start, planned charge end, energy needed and charge plan status.
 - German and English translations.
-
-## 1.0.6
-
-### Fixed
-- Made the existing configuration/options flow more robust.
-- Added an explicit reconfigure flow for already configured entries.
-- Added safer number validation to prevent the configuration dialog from hanging on invalid values.

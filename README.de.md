@@ -2,7 +2,7 @@
 
 **EV and Battery Charger** ist eine Home-Assistant-Custom-Integration zur Berechnung der Ladedauer, des geplanten Ladestarts und des geplanten Ladeendes für ein E-Auto, Plug-in-Hybrid-Fahrzeug oder einen Batteriespeicher.
 
-Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder optional den **nächsten Termin aus einem Home-Assistant-Kalender** verwenden. Ist ein Kalender hinterlegt und enthält dieser einen nächsten Termin, wird die Startzeit dieses Termins als gewünschte Fertig-Zeit genutzt. Das geplante Ladeende liegt weiterhin um den konfigurierten Puffer davor, zum Beispiel 30 Minuten.
+Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder optional den **nächsten Termin aus einem Home-Assistant-Kalender** verwenden. Im Config Flow kannst du jetzt festlegen, welche Quelle Vorrang hat: **Kalender zuerst** oder **tägliche Uhrzeit zuerst**. Das geplante Ladeende liegt weiterhin um den konfigurierten Puffer davor, zum Beispiel 30 Minuten.
 
 ## Funktionen
 
@@ -11,7 +11,8 @@ Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder op
 - Berechnung des geplanten Ladestarts
 - Berechnung des geplanten Ladeendes mit Puffer
 - Optional: Ladeplanung anhand des nächsten Home-Assistant-Kalendertermins
-- Fallback auf tägliche Fertig-Uhrzeit, wenn kein Kalender oder kein Kalendertermin verfügbar ist
+- Auswahl der Priorität: Kalender zuerst oder tägliche Uhrzeit zuerst
+- Fallback auf tägliche Fertig-Uhrzeit, wenn Kalender zuerst gewählt ist und kein Kalendertermin verfügbar ist
 - Ziel-Ladestand über `input_number`
 - Aktueller Akkustand über Sensor-Entität
 - Deutsche und englische Übersetzungen
@@ -44,7 +45,21 @@ Optional kann im Config Flow ein Kalender angegeben werden, zum Beispiel:
 calendar.cupra_ladung
 ```
 
-Dann verwendet die Integration den nächsten Termin dieses Kalenders als Ziel-Zeitpunkt. Beispiel:
+Zusätzlich wählst du im Config Flow die Priorität:
+
+```text
+calendar_first
+```
+
+oder:
+
+```text
+daily_time_first
+```
+
+Bei `calendar_first` verwendet die Integration den nächsten Kalendertermin als Ziel-Zeitpunkt, sofern einer verfügbar ist. Bei `daily_time_first` verwendet sie die tägliche Fertig-Uhrzeit als Hauptquelle.
+
+Beispiel mit `calendar_first`:
 
 - Termin im Kalender: `Morgen 08:00 Uhr`
 - Puffer: `30 Minuten`
@@ -58,7 +73,7 @@ Geplantes Ladeende: Morgen 07:30 Uhr
 Geplanter Ladestart: Morgen 06:00 Uhr
 ```
 
-Wenn kein Kalender eingetragen ist oder kein Kalendertermin mit `start_time` verfügbar ist, nutzt die Integration die tägliche Fertig-Uhrzeit.
+Wenn `calendar_first` gewählt ist und kein Kalender eingetragen ist oder kein Kalendertermin mit `start_time` verfügbar ist, nutzt die Integration die tägliche Fertig-Uhrzeit. Wenn `daily_time_first` gewählt ist, wird die tägliche Fertig-Uhrzeit direkt verwendet.
 
 Hinweis: Die Integration nutzt die nächsten Kalendertermin-Attribute der Kalender-Entität (`message`, `start_time`, `end_time`). Für sehr komplexe Kalender mit mehreren parallelen Terminen ist die Kalender-Automation von Home Assistant oft flexibler.
 
@@ -74,6 +89,7 @@ Hinweis: Die Integration nutzt die nächsten Kalendertermin-Attribute der Kalend
 | Nächster Kalendertermin Start | Startzeit des nächsten Kalendertermins, falls verfügbar |
 | Nächster Kalendertermin | Titel des nächsten Kalendertermins, falls verfügbar |
 | Ladeziel Quelle | `daily_time` oder `calendar` |
+| Ladeziel Priorität | `calendar_first` oder `daily_time_first` |
 | Ladeplan Status | `not_needed`, `waiting`, `charging_window` oder `late` |
 
 ## Installation

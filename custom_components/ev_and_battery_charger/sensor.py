@@ -36,14 +36,18 @@ from .const import (
     CONF_SOC_SENSOR,
     CONF_TARGET_SOC_ENTITY,
     CONF_TARGET_TIME,
+    CONF_TARGET_SOURCE_PRIORITY,
     DEFAULT_BATTERY_SIZE_KWH,
     DEFAULT_BUFFER_MINUTES,
     DEFAULT_CHARGE_POWER_KW,
     DEFAULT_EFFICIENCY,
     DEFAULT_NAME,
+    DEFAULT_TARGET_SOURCE_PRIORITY,
     DEFAULT_TARGET_TIME,
     DOMAIN,
     INVALID_STATES,
+    TARGET_PRIORITY_CALENDAR_FIRST,
+    TARGET_PRIORITY_DAILY_TIME_FIRST,
     TARGET_SOURCE_CALENDAR,
     TARGET_SOURCE_DAILY_TIME,
 )
@@ -62,6 +66,7 @@ class ChargeCalculation:
     buffer_minutes: int
     target_time: str
     target_source: str
+    target_source_priority: str
     calendar_entity: str | None
     calendar_event_title: str | None
     calendar_event_start: datetime | None
@@ -140,6 +145,14 @@ SENSOR_DESCRIPTIONS: tuple[EVAndBatteryChargerSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=[TARGET_SOURCE_DAILY_TIME, TARGET_SOURCE_CALENDAR],
         icon="mdi:calendar-sync",
+    ),
+    EVAndBatteryChargerSensorEntityDescription(
+        key="target_source_priority",
+        translation_key="target_source_priority",
+        value_key="target_source_priority",
+        device_class=SensorDeviceClass.ENUM,
+        options=[TARGET_PRIORITY_CALENDAR_FIRST, TARGET_PRIORITY_DAILY_TIME_FIRST],
+        icon="mdi:source-branch-sync",
     ),
     EVAndBatteryChargerSensorEntityDescription(
         key="charge_plan_status",
@@ -279,15 +292,31 @@ class EVAndBatteryChargerCalculator:
         efficiency = float(config.get(CONF_EFFICIENCY, DEFAULT_EFFICIENCY))
         buffer_minutes = int(float(config.get(CONF_BUFFER_MINUTES, DEFAULT_BUFFER_MINUTES)))
         target_time_value = config.get(CONF_TARGET_TIME, DEFAULT_TARGET_TIME)
+        target_source_priority = str(
+            config.get(CONF_TARGET_SOURCE_PRIORITY, DEFAULT_TARGET_SOURCE_PRIORITY)
+        ).strip()
+        if target_source_priority not in (
+            TARGET_PRIORITY_CALENDAR_FIRST,
+            TARGET_PRIORITY_DAILY_TIME_FIRST,
+        ):
+            target_source_priority = DEFAULT_TARGET_SOURCE_PRIORITY
         calendar_entity = str(config.get(CONF_CALENDAR_ENTITY, "")).strip()
 
         now = dt_util.now()
+        daily_ready_by = self._get_daily_ready_by(target_time_value, now)
         calendar_ready_by, calendar_details = self._get_calendar_ready_by(calendar_entity, now)
-        if calendar_ready_by is not None:
+
+        if target_source_priority == TARGET_PRIORITY_DAILY_TIME_FIRST:
+            ready_by = daily_ready_by
+            target_source = TARGET_SOURCE_DAILY_TIME
+            if ready_by is None and calendar_ready_by is not None:
+                ready_by = calendar_ready_by
+                target_source = TARGET_SOURCE_CALENDAR
+        elif calendar_ready_by is not None:
             ready_by = calendar_ready_by
             target_source = TARGET_SOURCE_CALENDAR
         else:
-            ready_by = self._get_daily_ready_by(target_time_value, now)
+            ready_by = daily_ready_by
             target_source = TARGET_SOURCE_DAILY_TIME
 
         planned_end = ready_by - timedelta(minutes=buffer_minutes)
@@ -326,6 +355,7 @@ class EVAndBatteryChargerCalculator:
             buffer_minutes=buffer_minutes,
             target_time=str(target_time_value),
             target_source=target_source,
+            target_source_priority=target_source_priority,
             ready_by=ready_by,
             planned_end=planned_end,
             planned_start=planned_start,
@@ -431,6 +461,7 @@ class EVAndBatteryChargerSensor(SensorEntity):
             "efficiency": calculation.efficiency,
             "buffer_minutes": calculation.buffer_minutes,
             "target_source": calculation.target_source,
+            "target_source_priority": calculation.target_source_priority,
             "daily_ready_time": calculation.target_time,
             "ready_by": calculation.ready_by.isoformat(),
             "planned_start": calculation.planned_start.isoformat(),

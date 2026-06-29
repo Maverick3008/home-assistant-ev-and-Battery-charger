@@ -19,14 +19,17 @@ from .const import (
     CONF_SOC_SENSOR,
     CONF_TARGET_SOC_ENTITY,
     CONF_TARGET_TIME,
+    CONF_TARGET_SOURCE_PRIORITY,
     DEFAULT_BATTERY_SIZE_KWH,
     DEFAULT_BUFFER_MINUTES,
     DEFAULT_CALENDAR_ENTITY,
     DEFAULT_CHARGE_POWER_KW,
     DEFAULT_EFFICIENCY,
     DEFAULT_NAME,
+    DEFAULT_TARGET_SOURCE_PRIORITY,
     DEFAULT_TARGET_TIME,
     DOMAIN,
+    TARGET_SOURCE_PRIORITY_OPTIONS,
 )
 
 
@@ -63,6 +66,10 @@ def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
                 CONF_TARGET_TIME,
                 default=defaults.get(CONF_TARGET_TIME, DEFAULT_TARGET_TIME),
             ): str,
+            vol.Required(
+                CONF_TARGET_SOURCE_PRIORITY,
+                default=defaults.get(CONF_TARGET_SOURCE_PRIORITY, DEFAULT_TARGET_SOURCE_PRIORITY),
+            ): vol.In(TARGET_SOURCE_PRIORITY_OPTIONS),
             vol.Optional(
                 CONF_CALENDAR_ENTITY,
                 default=defaults.get(CONF_CALENDAR_ENTITY, DEFAULT_CALENDAR_ENTITY),
@@ -135,6 +142,12 @@ def _validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     except (TypeError, ValueError):
         errors[CONF_TARGET_TIME] = "invalid_time"
 
+    target_source_priority = str(
+        user_input.get(CONF_TARGET_SOURCE_PRIORITY, DEFAULT_TARGET_SOURCE_PRIORITY)
+    ).strip()
+    if target_source_priority not in TARGET_SOURCE_PRIORITY_OPTIONS:
+        errors[CONF_TARGET_SOURCE_PRIORITY] = "invalid_target_source_priority"
+
     battery_size = _as_float(user_input, CONF_BATTERY_SIZE_KWH)
     if battery_size is None:
         errors[CONF_BATTERY_SIZE_KWH] = "invalid_number"
@@ -169,6 +182,9 @@ def _normalize_input(user_input: dict[str, Any]) -> dict[str, Any]:
     normalized[CONF_SOC_SENSOR] = str(normalized.get(CONF_SOC_SENSOR, "")).strip()
     normalized[CONF_TARGET_SOC_ENTITY] = str(normalized.get(CONF_TARGET_SOC_ENTITY, "")).strip()
     normalized[CONF_TARGET_TIME] = str(normalized.get(CONF_TARGET_TIME, "")).strip()
+    normalized[CONF_TARGET_SOURCE_PRIORITY] = str(
+        normalized.get(CONF_TARGET_SOURCE_PRIORITY, DEFAULT_TARGET_SOURCE_PRIORITY)
+    ).strip()
     normalized[CONF_CALENDAR_ENTITY] = str(normalized.get(CONF_CALENDAR_ENTITY, "")).strip()
     return normalized
 

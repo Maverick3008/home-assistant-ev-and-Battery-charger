@@ -27,6 +27,9 @@
       },
       "target_source": {
         "default": "mdi:calendar-sync"
+      },
+      "target_source_priority": {
+        "default": "mdi:source-branch-sync"
       }
     }
   }
