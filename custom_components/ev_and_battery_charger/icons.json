@@ -15,6 +15,18 @@
       },
       "charge_plan_status": {
         "default": "mdi:calendar-clock"
+      },
+      "target_ready_time": {
+        "default": "mdi:calendar-check"
+      },
+      "next_calendar_event_start": {
+        "default": "mdi:calendar-start"
+      },
+      "next_calendar_event_title": {
+        "default": "mdi:calendar-text"
+      },
+      "target_source": {
+        "default": "mdi:calendar-sync"
       }
     }
   }

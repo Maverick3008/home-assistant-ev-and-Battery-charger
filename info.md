@@ -1,5 +1,12 @@
 # EV and Battery Charger
 
-Calculates charging duration, planned charging start and planned charging end for an EV, plug-in hybrid or battery storage system from current SOC, target SOC and daily ready-by time.
+EV and Battery Charger calculates charging duration, planned start time and planned end time for an electric vehicle or battery storage system. It can use either a daily ready-by time or the next event from a Home Assistant calendar.
 
-Berechnet die Ladedauer, den geplanten Ladestart und das geplante Ladeende für ein E-Auto, Plug-in-Hybrid-Fahrzeug oder einen Batteriespeicher aus aktuellem SOC, Ziel-SOC und täglicher Fertig-Uhrzeit.
+## Highlights
+
+- Calculates charging duration in minutes
+- Calculates charging energy in kWh
+- Calculates planned charging start and end
+- Optional calendar-based ready-by time
+- German and English documentation
+- Icon, logo and brand assets included

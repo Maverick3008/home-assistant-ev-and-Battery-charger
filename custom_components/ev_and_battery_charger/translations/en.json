@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "EV and Battery Charger",
-        "description": "Calculate the required charging duration, planned start time and planned end time for an EV, plug-in hybrid or battery storage system based on the current battery level, a target charge helper and a daily ready-by time.",
+        "description": "Calculate the required charging duration, planned start time and planned end time for an EV, plug-in hybrid or battery storage system. Optionally, the next event from a Home Assistant calendar can be used as the ready-by time; without a calendar, the daily ready-by time is used.",
         "data": {
           "name": "Charger name",
           "soc_sensor": "Current battery level sensor",
@@ -13,7 +13,8 @@
           "battery_size_kwh": "Battery size",
           "charge_power_kw": "Charging power",
           "efficiency": "Charging efficiency factor",
-          "buffer_minutes": "Buffer before ready-by time"
+          "buffer_minutes": "Buffer before ready-by time",
+          "calendar_entity": "Calendar for next event (optional)"
         },
         "data_description": {
           "name": "Example: Cupra Leon or Home Battery",
@@ -23,7 +24,8 @@
           "battery_size_kwh": "Usable battery capacity in kWh.",
           "charge_power_kw": "Expected charging power in kW.",
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
-          "buffer_minutes": "The planned charging end is this many minutes before the ready-by time. Default: 30 minutes."
+          "buffer_minutes": "The planned charging end is this many minutes before the ready-by time. Default: 30 minutes.",
+          "calendar_entity": "Optional: calendar.* entity. If a next event is available, its start time is used as the ready-by time. Leave empty to use only the daily time."
         }
       }
     },
@@ -33,7 +35,8 @@
       "invalid_time": "Please enter the time as HH:MM or HH:MM:SS, for example 06:00.",
       "must_be_positive": "The value must be greater than 0.",
       "invalid_efficiency": "Charging efficiency must be greater than 0 and no more than 1, for example 0.93.",
-      "must_not_be_negative": "The value must not be negative."
+      "must_not_be_negative": "The value must not be negative.",
+      "invalid_calendar_entity": "Please enter a valid calendar entity, for example calendar.cupra_charging, or leave the field empty."
     },
     "abort": {
       "already_configured": "This charger is already configured."
@@ -43,7 +46,7 @@
     "step": {
       "init": {
         "title": "EV and Battery Charger options",
-        "description": "Adjust the entities and charging parameters used for the charging plan.",
+        "description": "Adjust the entities, optional calendar and charging parameters used for the charging plan.",
         "data": {
           "name": "Charger name",
           "soc_sensor": "Current battery level sensor",
@@ -52,7 +55,8 @@
           "battery_size_kwh": "Battery size",
           "charge_power_kw": "Charging power",
           "efficiency": "Charging efficiency factor",
-          "buffer_minutes": "Buffer before ready-by time"
+          "buffer_minutes": "Buffer before ready-by time",
+          "calendar_entity": "Calendar for next event (optional)"
         },
         "data_description": {
           "name": "Example: Cupra Leon or Home Battery",
@@ -62,7 +66,8 @@
           "battery_size_kwh": "Usable battery capacity in kWh.",
           "charge_power_kw": "Expected charging power in kW.",
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
-          "buffer_minutes": "The planned charging end is this many minutes before the ready-by time. Default: 30 minutes."
+          "buffer_minutes": "The planned charging end is this many minutes before the ready-by time. Default: 30 minutes.",
+          "calendar_entity": "Optional: calendar.* entity. If a next event is available, its start time is used as the ready-by time. Leave empty to use only the daily time."
         }
       }
     },
@@ -72,7 +77,8 @@
       "invalid_time": "Please enter the time as HH:MM or HH:MM:SS, for example 06:00.",
       "must_be_positive": "The value must be greater than 0.",
       "invalid_efficiency": "Charging efficiency must be greater than 0 and no more than 1, for example 0.93.",
-      "must_not_be_negative": "The value must not be negative."
+      "must_not_be_negative": "The value must not be negative.",
+      "invalid_calendar_entity": "Please enter a valid calendar entity, for example calendar.cupra_charging, or leave the field empty."
     }
   },
   "entity": {
@@ -96,6 +102,22 @@
           "waiting": "Waiting",
           "charging_window": "Charging window",
           "late": "Late"
+        }
+      },
+      "target_ready_time": {
+        "name": "Target ready time"
+      },
+      "next_calendar_event_start": {
+        "name": "Next calendar event start"
+      },
+      "next_calendar_event_title": {
+        "name": "Next calendar event"
+      },
+      "target_source": {
+        "name": "Target source",
+        "state": {
+          "daily_time": "Daily time",
+          "calendar": "Calendar"
         }
       }
     }

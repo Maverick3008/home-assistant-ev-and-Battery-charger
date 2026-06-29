@@ -1,4 +1,17 @@
+## 1.0.5
+
+- Added optional Home Assistant calendar support.
+- The next calendar event can now be used as the ready-by time.
+- Added target ready time, target source and next calendar event sensors.
+- Updated German and English documentation.
+
 # Changelog
+
+## 1.0.4
+
+- Added local brand assets in `custom_components/ev_and_battery_charger/brand/`.
+- Added repository-level `brand/` folder for HACS compatibility.
+
 ## 1.0.3
 
 - Fixed a possible Home Assistant config flow `400: Bad Request` error by replacing advanced form selectors with robust plain input fields.

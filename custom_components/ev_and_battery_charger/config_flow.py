@@ -12,6 +12,7 @@ from homeassistant.util import slugify
 from .const import (
     CONF_BATTERY_SIZE_KWH,
     CONF_BUFFER_MINUTES,
+    CONF_CALENDAR_ENTITY,
     CONF_CHARGE_POWER_KW,
     CONF_EFFICIENCY,
     CONF_NAME,
@@ -20,6 +21,7 @@ from .const import (
     CONF_TARGET_TIME,
     DEFAULT_BATTERY_SIZE_KWH,
     DEFAULT_BUFFER_MINUTES,
+    DEFAULT_CALENDAR_ENTITY,
     DEFAULT_CHARGE_POWER_KW,
     DEFAULT_EFFICIENCY,
     DEFAULT_NAME,
@@ -61,6 +63,10 @@ def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
                 CONF_TARGET_TIME,
                 default=defaults.get(CONF_TARGET_TIME, DEFAULT_TARGET_TIME),
             ): str,
+            vol.Optional(
+                CONF_CALENDAR_ENTITY,
+                default=defaults.get(CONF_CALENDAR_ENTITY, DEFAULT_CALENDAR_ENTITY),
+            ): str,
             vol.Required(
                 CONF_BATTERY_SIZE_KWH,
                 default=defaults.get(CONF_BATTERY_SIZE_KWH, DEFAULT_BATTERY_SIZE_KWH),
@@ -97,6 +103,10 @@ def _validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     if "." not in target_soc_entity:
         errors[CONF_TARGET_SOC_ENTITY] = "invalid_entity"
 
+    calendar_entity = user_input.get(CONF_CALENDAR_ENTITY, "").strip()
+    if calendar_entity and not calendar_entity.startswith("calendar."):
+        errors[CONF_CALENDAR_ENTITY] = "invalid_calendar_entity"
+
     target_time = user_input.get(CONF_TARGET_TIME, "").strip()
     try:
         parts = [int(part) for part in target_time.split(":")]
@@ -125,6 +135,16 @@ def _validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     return errors
 
 
+def _normalize_input(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Normalize text values before storing them."""
+    user_input[CONF_NAME] = user_input[CONF_NAME].strip()
+    user_input[CONF_SOC_SENSOR] = user_input[CONF_SOC_SENSOR].strip()
+    user_input[CONF_TARGET_SOC_ENTITY] = user_input[CONF_TARGET_SOC_ENTITY].strip()
+    user_input[CONF_TARGET_TIME] = user_input[CONF_TARGET_TIME].strip()
+    user_input[CONF_CALENDAR_ENTITY] = user_input.get(CONF_CALENDAR_ENTITY, "").strip()
+    return user_input
+
+
 class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for EV and Battery Charger."""
 
@@ -137,12 +157,7 @@ class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Normalize simple text fields.
-            user_input[CONF_NAME] = user_input[CONF_NAME].strip()
-            user_input[CONF_SOC_SENSOR] = user_input[CONF_SOC_SENSOR].strip()
-            user_input[CONF_TARGET_SOC_ENTITY] = user_input[CONF_TARGET_SOC_ENTITY].strip()
-            user_input[CONF_TARGET_TIME] = user_input[CONF_TARGET_TIME].strip()
-
+            user_input = _normalize_input(user_input)
             errors = _validate_input(user_input)
             if not errors:
                 await self.async_set_unique_id(slugify(user_input[CONF_NAME]))
@@ -174,11 +189,7 @@ class EVAndBatteryChargerOptionsFlow(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            user_input[CONF_NAME] = user_input[CONF_NAME].strip()
-            user_input[CONF_SOC_SENSOR] = user_input[CONF_SOC_SENSOR].strip()
-            user_input[CONF_TARGET_SOC_ENTITY] = user_input[CONF_TARGET_SOC_ENTITY].strip()
-            user_input[CONF_TARGET_TIME] = user_input[CONF_TARGET_TIME].strip()
-
+            user_input = _normalize_input(user_input)
             errors = _validate_input(user_input)
             if not errors:
                 return self.async_create_entry(title="", data=user_input)

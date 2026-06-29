@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from math import ceil
 from typing import Any
 
@@ -29,6 +29,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     CONF_BATTERY_SIZE_KWH,
     CONF_BUFFER_MINUTES,
+    CONF_CALENDAR_ENTITY,
     CONF_CHARGE_POWER_KW,
     CONF_EFFICIENCY,
     CONF_NAME,
@@ -43,6 +44,8 @@ from .const import (
     DEFAULT_TARGET_TIME,
     DOMAIN,
     INVALID_STATES,
+    TARGET_SOURCE_CALENDAR,
+    TARGET_SOURCE_DAILY_TIME,
 )
 
 
@@ -58,6 +61,12 @@ class ChargeCalculation:
     efficiency: float
     buffer_minutes: int
     target_time: str
+    target_source: str
+    calendar_entity: str | None
+    calendar_event_title: str | None
+    calendar_event_start: datetime | None
+    calendar_event_end: datetime | None
+    calendar_event_all_day: bool | None
     ready_by: datetime
     planned_end: datetime
     planned_start: datetime
@@ -86,6 +95,12 @@ SENSOR_DESCRIPTIONS: tuple[EVAndBatteryChargerSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EVAndBatteryChargerSensorEntityDescription(
+        key="target_ready_time",
+        translation_key="target_ready_time",
+        value_key="ready_by",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    EVAndBatteryChargerSensorEntityDescription(
         key="planned_charge_start",
         translation_key="planned_charge_start",
         value_key="planned_start",
@@ -105,6 +120,26 @@ SENSOR_DESCRIPTIONS: tuple[EVAndBatteryChargerSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
+    ),
+    EVAndBatteryChargerSensorEntityDescription(
+        key="next_calendar_event_start",
+        translation_key="next_calendar_event_start",
+        value_key="calendar_event_start",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    EVAndBatteryChargerSensorEntityDescription(
+        key="next_calendar_event_title",
+        translation_key="next_calendar_event_title",
+        value_key="calendar_event_title",
+        icon="mdi:calendar-text",
+    ),
+    EVAndBatteryChargerSensorEntityDescription(
+        key="target_source",
+        translation_key="target_source",
+        value_key="target_source",
+        device_class=SensorDeviceClass.ENUM,
+        options=[TARGET_SOURCE_DAILY_TIME, TARGET_SOURCE_CALENDAR],
+        icon="mdi:calendar-sync",
     ),
     EVAndBatteryChargerSensorEntityDescription(
         key="charge_plan_status",
@@ -131,7 +166,7 @@ async def async_setup_entry(
 
 
 class EVAndBatteryChargerCalculator:
-    """Calculate charging duration and daily charging window."""
+    """Calculate charging duration and charging window."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the calculator."""
@@ -163,6 +198,71 @@ class EVAndBatteryChargerCalculator:
             parts.append(0)
         return time(parts[0], parts[1], parts[2])
 
+    @staticmethod
+    def _parse_datetime(value: Any, now: datetime) -> datetime | None:
+        """Parse a Home Assistant datetime/date value and return local datetime."""
+        if value in INVALID_STATES or value is None:
+            return None
+
+        if isinstance(value, datetime):
+            parsed = value
+        elif isinstance(value, date):
+            parsed = datetime.combine(value, time.min)
+        else:
+            parsed = dt_util.parse_datetime(str(value))
+            if parsed is None:
+                parsed_date = dt_util.parse_date(str(value))
+                if parsed_date is None:
+                    return None
+                parsed = datetime.combine(parsed_date, time.min)
+
+        if parsed.tzinfo is None:
+            return parsed.replace(tzinfo=now.tzinfo)
+        return dt_util.as_local(parsed)
+
+    def _get_calendar_ready_by(self, calendar_entity: str, now: datetime) -> tuple[datetime | None, dict[str, Any]]:
+        """Return ready-by datetime from the configured calendar entity."""
+        if not calendar_entity:
+            return None, {
+                "calendar_entity": None,
+                "calendar_event_title": None,
+                "calendar_event_start": None,
+                "calendar_event_end": None,
+                "calendar_event_all_day": None,
+            }
+
+        state = self.hass.states.get(calendar_entity)
+        if state is None:
+            return None, {
+                "calendar_entity": calendar_entity,
+                "calendar_event_title": None,
+                "calendar_event_start": None,
+                "calendar_event_end": None,
+                "calendar_event_all_day": None,
+            }
+
+        attrs = state.attributes
+        event_start = self._parse_datetime(attrs.get("start_time"), now)
+        event_end = self._parse_datetime(attrs.get("end_time"), now)
+        event_title = attrs.get("message")
+        event_all_day = attrs.get("all_day")
+
+        return event_start, {
+            "calendar_entity": calendar_entity,
+            "calendar_event_title": event_title,
+            "calendar_event_start": event_start,
+            "calendar_event_end": event_end,
+            "calendar_event_all_day": event_all_day,
+        }
+
+    def _get_daily_ready_by(self, target_time_value: str | time, now: datetime) -> datetime:
+        """Return the next daily ready-by datetime."""
+        target_time = self._parse_time(target_time_value)
+        ready_by = datetime.combine(now.date(), target_time).replace(tzinfo=now.tzinfo)
+        if ready_by <= now:
+            ready_by += timedelta(days=1)
+        return ready_by
+
     def calculate(self) -> ChargeCalculation | None:
         """Calculate the current charging plan."""
         config = self.config
@@ -179,12 +279,16 @@ class EVAndBatteryChargerCalculator:
         efficiency = float(config.get(CONF_EFFICIENCY, DEFAULT_EFFICIENCY))
         buffer_minutes = int(float(config.get(CONF_BUFFER_MINUTES, DEFAULT_BUFFER_MINUTES)))
         target_time_value = config.get(CONF_TARGET_TIME, DEFAULT_TARGET_TIME)
-        target_time = self._parse_time(target_time_value)
+        calendar_entity = str(config.get(CONF_CALENDAR_ENTITY, "")).strip()
 
         now = dt_util.now()
-        ready_by = datetime.combine(now.date(), target_time).replace(tzinfo=now.tzinfo)
-        if ready_by <= now:
-            ready_by += timedelta(days=1)
+        calendar_ready_by, calendar_details = self._get_calendar_ready_by(calendar_entity, now)
+        if calendar_ready_by is not None:
+            ready_by = calendar_ready_by
+            target_source = TARGET_SOURCE_CALENDAR
+        else:
+            ready_by = self._get_daily_ready_by(target_time_value, now)
+            target_source = TARGET_SOURCE_DAILY_TIME
 
         planned_end = ready_by - timedelta(minutes=buffer_minutes)
 
@@ -221,6 +325,7 @@ class EVAndBatteryChargerCalculator:
             efficiency=efficiency,
             buffer_minutes=buffer_minutes,
             target_time=str(target_time_value),
+            target_source=target_source,
             ready_by=ready_by,
             planned_end=planned_end,
             planned_start=planned_start,
@@ -230,6 +335,7 @@ class EVAndBatteryChargerCalculator:
             status=status,
             minutes_until_start=minutes_until_start,
             minutes_until_end=minutes_until_end,
+            **calendar_details,
         )
 
 
@@ -254,16 +360,21 @@ class EVAndBatteryChargerSensor(SensorEntity):
             identifiers={(DOMAIN, entry.entry_id)},
             name=self.calculator.config.get(CONF_NAME, DEFAULT_NAME),
             manufacturer="EV and Battery Charger",
-            model="Daily EV and battery charge planner",
+            model="Calendar-aware EV and battery charge planner",
         )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to source entity changes and minute ticks."""
         config = self.calculator.config
+        watched_entities = [config[CONF_SOC_SENSOR], config[CONF_TARGET_SOC_ENTITY]]
+        calendar_entity = str(config.get(CONF_CALENDAR_ENTITY, "")).strip()
+        if calendar_entity:
+            watched_entities.append(calendar_entity)
+
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
-                [config[CONF_SOC_SENSOR], config[CONF_TARGET_SOC_ENTITY]],
+                watched_entities,
                 self._async_source_changed,
             )
         )
@@ -319,6 +430,8 @@ class EVAndBatteryChargerSensor(SensorEntity):
             "charge_power_kw": calculation.charge_power_kw,
             "efficiency": calculation.efficiency,
             "buffer_minutes": calculation.buffer_minutes,
+            "target_source": calculation.target_source,
+            "daily_ready_time": calculation.target_time,
             "ready_by": calculation.ready_by.isoformat(),
             "planned_start": calculation.planned_start.isoformat(),
             "planned_end": calculation.planned_end.isoformat(),
@@ -329,6 +442,11 @@ class EVAndBatteryChargerSensor(SensorEntity):
             "minutes_until_end": calculation.minutes_until_end,
             "source_soc_entity": self.calculator.config[CONF_SOC_SENSOR],
             "target_soc_entity": self.calculator.config[CONF_TARGET_SOC_ENTITY],
+            "calendar_entity": calculation.calendar_entity,
+            "calendar_event_title": calculation.calendar_event_title,
+            "calendar_event_start": calculation.calendar_event_start.isoformat() if calculation.calendar_event_start else None,
+            "calendar_event_end": calculation.calendar_event_end.isoformat() if calculation.calendar_event_end else None,
+            "calendar_event_all_day": calculation.calendar_event_all_day,
             "units": {
                 "soc": PERCENTAGE,
                 "energy": UnitOfEnergy.KILO_WATT_HOUR,

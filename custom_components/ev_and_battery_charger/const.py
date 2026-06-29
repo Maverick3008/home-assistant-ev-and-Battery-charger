@@ -6,6 +6,7 @@ CONF_NAME = "name"
 CONF_SOC_SENSOR = "soc_sensor"
 CONF_TARGET_SOC_ENTITY = "target_soc_entity"
 CONF_TARGET_TIME = "target_time"
+CONF_CALENDAR_ENTITY = "calendar_entity"
 CONF_BATTERY_SIZE_KWH = "battery_size_kwh"
 CONF_CHARGE_POWER_KW = "charge_power_kw"
 CONF_EFFICIENCY = "efficiency"
@@ -17,5 +18,9 @@ DEFAULT_CHARGE_POWER_KW = 10.5
 DEFAULT_EFFICIENCY = 0.93
 DEFAULT_BUFFER_MINUTES = 30
 DEFAULT_TARGET_TIME = "06:00:00"
+DEFAULT_CALENDAR_ENTITY = ""
+
+TARGET_SOURCE_DAILY_TIME = "daily_time"
+TARGET_SOURCE_CALENDAR = "calendar"
 
 INVALID_STATES = {"unknown", "unavailable", "none", "None", ""}
