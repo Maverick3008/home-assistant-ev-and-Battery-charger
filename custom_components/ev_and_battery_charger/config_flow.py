@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
+from homeassistant.helpers import selector
 from homeassistant.util import slugify
 
 from .const import (
@@ -18,8 +19,8 @@ from .const import (
     CONF_NAME,
     CONF_SOC_SENSOR,
     CONF_TARGET_SOC_ENTITY,
-    CONF_TARGET_TIME,
     CONF_TARGET_SOURCE_PRIORITY,
+    CONF_TARGET_TIME,
     DEFAULT_BATTERY_SIZE_KWH,
     DEFAULT_BUFFER_MINUTES,
     DEFAULT_CALENDAR_ENTITY,
@@ -40,13 +41,23 @@ def _required_key(key: str, default: Any | None = None) -> vol.Required:
     return vol.Required(key, default=default)
 
 
-def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
-    """Build the config/options schema.
+def _target_priority_selector() -> selector.SelectSelector:
+    """Return the target source priority selector.
 
-    This intentionally uses plain schema fields instead of advanced selectors.
-    That keeps the config flow compatible with more Home Assistant versions and
-    avoids frontend 400 errors caused by selector serialization differences.
+    The selector stores the stable internal values, while Home Assistant uses
+    the translation key to display friendly labels such as "Kalendertermin
+    zuerst" instead of raw values like "calendar_first".
     """
+    return selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=list(TARGET_SOURCE_PRIORITY_OPTIONS),
+            translation_key=CONF_TARGET_SOURCE_PRIORITY,
+        )
+    )
+
+
+def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
+    """Build the config/options schema."""
     defaults = defaults or {}
     return vol.Schema(
         {
@@ -68,8 +79,11 @@ def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
             ): str,
             vol.Required(
                 CONF_TARGET_SOURCE_PRIORITY,
-                default=defaults.get(CONF_TARGET_SOURCE_PRIORITY, DEFAULT_TARGET_SOURCE_PRIORITY),
-            ): vol.In(TARGET_SOURCE_PRIORITY_OPTIONS),
+                default=defaults.get(
+                    CONF_TARGET_SOURCE_PRIORITY,
+                    DEFAULT_TARGET_SOURCE_PRIORITY,
+                ),
+            ): _target_priority_selector(),
             vol.Optional(
                 CONF_CALENDAR_ENTITY,
                 default=defaults.get(CONF_CALENDAR_ENTITY, DEFAULT_CALENDAR_ENTITY),
@@ -186,13 +200,23 @@ def _normalize_input(user_input: dict[str, Any]) -> dict[str, Any]:
         normalized.get(CONF_TARGET_SOURCE_PRIORITY, DEFAULT_TARGET_SOURCE_PRIORITY)
     ).strip()
     normalized[CONF_CALENDAR_ENTITY] = str(normalized.get(CONF_CALENDAR_ENTITY, "")).strip()
+    normalized[CONF_BATTERY_SIZE_KWH] = float(normalized[CONF_BATTERY_SIZE_KWH])
+    normalized[CONF_CHARGE_POWER_KW] = float(normalized[CONF_CHARGE_POWER_KW])
+    normalized[CONF_EFFICIENCY] = float(normalized[CONF_EFFICIENCY])
+    normalized[CONF_BUFFER_MINUTES] = int(float(normalized[CONF_BUFFER_MINUTES]))
     return normalized
+
+
+_OPTIONS_FLOW_BASE = getattr(
+    config_entries, "OptionsFlowWithReload", config_entries.OptionsFlow
+)
 
 
 class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for EV and Battery Charger."""
 
     VERSION = 1
+    MINOR_VERSION = 8
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -218,11 +242,7 @@ class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle Home Assistant's reconfigure action for an existing entry."""
-        entry_id = self.context.get("entry_id")
-        entry = self.hass.config_entries.async_get_entry(entry_id) if entry_id else None
-        if entry is None:
-            return self.async_abort(reason="unknown_entry")
-
+        entry = self._get_reconfigure_entry()
         current = {**entry.data, **entry.options}
         errors: dict[str, str] = {}
 
@@ -230,14 +250,16 @@ class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input = _normalize_input(user_input)
             errors = _validate_input(user_input)
             if not errors:
-                self.hass.config_entries.async_update_entry(
+                # Keep the same unique ID, update the existing entry, and let
+                # Home Assistant reload the entry safely after the flow ends.
+                await self.async_set_unique_id(entry.unique_id or slugify(user_input[CONF_NAME]))
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
                     entry,
+                    data_updates=user_input,
                     title=user_input[CONF_NAME],
-                    data=user_input,
-                    options={},
+                    reason="reconfigure_successful",
                 )
-                await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="reconfigure_successful")
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -251,34 +273,16 @@ class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> EVAndBatteryChargerOptionsFlow:
         """Create the options flow."""
-        return EVAndBatteryChargerOptionsFlow(config_entry)
+        return EVAndBatteryChargerOptionsFlow()
 
 
-class EVAndBatteryChargerOptionsFlow(config_entries.OptionsFlow):
+class EVAndBatteryChargerOptionsFlow(_OPTIONS_FLOW_BASE):
     """Handle EV and Battery Charger options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry | None = None) -> None:
-        """Initialize the options flow.
-
-        Passing the config entry explicitly keeps the flow compatible with Home
-        Assistant versions where OptionsFlow does not automatically expose it.
-        """
-        self._config_entry = config_entry
-
-    def _entry(self) -> config_entries.ConfigEntry | None:
-        """Return the config entry for this options flow."""
-        if self._config_entry is not None:
-            return self._config_entry
-        return getattr(self, "config_entry", None)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Manage the options."""
-        entry = self._entry()
-        if entry is None:
-            return self.async_abort(reason="unknown_entry")
-
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -287,7 +291,7 @@ class EVAndBatteryChargerOptionsFlow(config_entries.OptionsFlow):
             if not errors:
                 return self.async_create_entry(title="", data=user_input)
 
-        current = {**entry.data, **entry.options}
+        current = {**self.config_entry.data, **self.config_entry.options}
         return self.async_show_form(
             step_id="init",
             data_schema=_build_schema(user_input or current),

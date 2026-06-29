@@ -1,6 +1,7 @@
 """The EV and Battery Charger integration."""
 from __future__ import annotations
 
+from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -14,7 +15,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up EV and Battery Charger from a config entry."""
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
+    # On Home Assistant versions without OptionsFlowWithReload we still need a
+    # listener to reload the integration after options change. Newer versions
+    # handle the reload in the options flow itself, avoiding double reloads.
+    if not hasattr(config_entries, "OptionsFlowWithReload"):
+        entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
     return True
 
 
@@ -28,5 +35,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry when options are changed."""
-    await async_unload_entry(hass, entry)
-    await async_setup_entry(hass, entry)
+    await hass.config_entries.async_reload(entry.entry_id)

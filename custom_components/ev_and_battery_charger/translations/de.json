@@ -10,7 +10,7 @@
           "soc_sensor": "Sensor für aktuellen Akkustand",
           "target_soc_entity": "Helper für Ziel-Ladestand",
           "target_time": "Tägliche Fertig-Uhrzeit",
-          "target_source_priority": "Priorität für Ladeziel",
+          "target_source_priority": "Welche Zielzeit zuerst verwenden?",
           "battery_size_kwh": "Batteriegröße",
           "charge_power_kw": "Ladeleistung",
           "efficiency": "Ladeeffizienz-Faktor",
@@ -22,7 +22,7 @@
           "soc_sensor": "Entität, die den aktuellen Ladestand in Prozent liefert.",
           "target_soc_entity": "Normalerweise ein input_number-Helfer mit dem gewünschten Ziel-Ladestand in Prozent.",
           "target_time": "Zu dieser Uhrzeit soll das Fahrzeug jeden Tag fertig geladen sein.",
-          "target_source_priority": "Wähle, ob zuerst der Kalender oder die tägliche Nacht-Uhrzeit als Ladeziel verwendet werden soll. Werte: calendar_first oder daily_time_first.",
+          "target_source_priority": "Wähle, welche Zielzeit Vorrang hat: der nächste Kalendertermin oder die täglich festgelegte Nacht-Uhrzeit.",
           "battery_size_kwh": "Nutzbare Batteriekapazität in kWh.",
           "charge_power_kw": "Erwartete Ladeleistung in kW.",
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
@@ -38,7 +38,7 @@
           "soc_sensor": "Sensor für aktuellen Akkustand",
           "target_soc_entity": "Helper für Ziel-Ladestand",
           "target_time": "Tägliche Fertig-Uhrzeit",
-          "target_source_priority": "Priorität für Ladeziel",
+          "target_source_priority": "Welche Zielzeit zuerst verwenden?",
           "battery_size_kwh": "Batteriegröße",
           "charge_power_kw": "Ladeleistung",
           "efficiency": "Ladeeffizienz-Faktor",
@@ -50,7 +50,7 @@
           "soc_sensor": "Entität, die den aktuellen Ladestand in Prozent liefert.",
           "target_soc_entity": "Normalerweise ein input_number-Helfer mit dem gewünschten Ziel-Ladestand in Prozent.",
           "target_time": "Zu dieser Uhrzeit soll das Fahrzeug jeden Tag fertig geladen sein.",
-          "target_source_priority": "Wähle, ob zuerst der Kalender oder die tägliche Nacht-Uhrzeit als Ladeziel verwendet werden soll. Werte: calendar_first oder daily_time_first.",
+          "target_source_priority": "Wähle, welche Zielzeit Vorrang hat: der nächste Kalendertermin oder die täglich festgelegte Nacht-Uhrzeit.",
           "battery_size_kwh": "Nutzbare Batteriekapazität in kWh.",
           "charge_power_kw": "Erwartete Ladeleistung in kW.",
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
@@ -68,7 +68,7 @@
       "must_not_be_negative": "Der Wert darf nicht negativ sein.",
       "invalid_calendar_entity": "Bitte gib eine gültige Kalender-Entität ein, zum Beispiel calendar.ladung_cupra, oder lasse das Feld leer.",
       "invalid_number": "Bitte gib eine gültige Zahl ein.",
-      "invalid_target_source_priority": "Bitte wähle calendar_first oder daily_time_first."
+      "invalid_target_source_priority": "Bitte wähle Kalendertermin zuerst oder Tägliche Nacht-Uhrzeit zuerst."
     },
     "abort": {
       "already_configured": "Diese Bezeichnung ist bereits eingerichtet.",
@@ -86,7 +86,7 @@
           "soc_sensor": "Sensor für aktuellen Akkustand",
           "target_soc_entity": "Helper für Ziel-Ladestand",
           "target_time": "Tägliche Fertig-Uhrzeit",
-          "target_source_priority": "Priorität für Ladeziel",
+          "target_source_priority": "Welche Zielzeit zuerst verwenden?",
           "battery_size_kwh": "Batteriegröße",
           "charge_power_kw": "Ladeleistung",
           "efficiency": "Ladeeffizienz-Faktor",
@@ -98,7 +98,7 @@
           "soc_sensor": "Entität, die den aktuellen Ladestand in Prozent liefert.",
           "target_soc_entity": "Normalerweise ein input_number-Helfer mit dem gewünschten Ziel-Ladestand in Prozent.",
           "target_time": "Zu dieser Uhrzeit soll das Fahrzeug jeden Tag fertig geladen sein.",
-          "target_source_priority": "Wähle, ob zuerst der Kalender oder die tägliche Nacht-Uhrzeit als Ladeziel verwendet werden soll. Werte: calendar_first oder daily_time_first.",
+          "target_source_priority": "Wähle, welche Zielzeit Vorrang hat: der nächste Kalendertermin oder die täglich festgelegte Nacht-Uhrzeit.",
           "battery_size_kwh": "Nutzbare Batteriekapazität in kWh.",
           "charge_power_kw": "Erwartete Ladeleistung in kW.",
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
@@ -116,7 +116,7 @@
       "must_not_be_negative": "Der Wert darf nicht negativ sein.",
       "invalid_calendar_entity": "Bitte gib eine gültige Kalender-Entität ein, zum Beispiel calendar.ladung_cupra, oder lasse das Feld leer.",
       "invalid_number": "Bitte gib eine gültige Zahl ein.",
-      "invalid_target_source_priority": "Bitte wähle calendar_first oder daily_time_first."
+      "invalid_target_source_priority": "Bitte wähle Kalendertermin zuerst oder Tägliche Nacht-Uhrzeit zuerst."
     },
     "abort": {
       "unknown_entry": "Die bestehende Konfiguration wurde nicht gefunden."
@@ -164,9 +164,17 @@
       "target_source_priority": {
         "name": "Ladeziel Priorität",
         "state": {
-          "calendar_first": "Kalender zuerst",
-          "daily_time_first": "Tägliche Uhrzeit zuerst"
+          "calendar_first": "Kalendertermin zuerst",
+          "daily_time_first": "Tägliche Nacht-Uhrzeit zuerst"
         }
+      }
+    }
+  },
+  "selector": {
+    "target_source_priority": {
+      "options": {
+        "calendar_first": "Kalendertermin zuerst",
+        "daily_time_first": "Tägliche Nacht-Uhrzeit zuerst"
       }
     }
   }

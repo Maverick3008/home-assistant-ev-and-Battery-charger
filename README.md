@@ -48,18 +48,18 @@ calendar.cupra_ladung
 Zusätzlich wählst du im Config Flow die Priorität:
 
 ```text
-calendar_first
+Kalendertermin zuerst
 ```
 
 oder:
 
 ```text
-daily_time_first
+Tägliche Nacht-Uhrzeit zuerst
 ```
 
-Bei `calendar_first` verwendet die Integration den nächsten Kalendertermin als Ziel-Zeitpunkt, sofern einer verfügbar ist. Bei `daily_time_first` verwendet sie die tägliche Fertig-Uhrzeit als Hauptquelle.
+Bei `Kalendertermin zuerst` verwendet die Integration den nächsten Kalendertermin als Ziel-Zeitpunkt, sofern einer verfügbar ist. Bei `Tägliche Nacht-Uhrzeit zuerst` verwendet sie die tägliche Fertig-Uhrzeit als Hauptquelle.
 
-Beispiel mit `calendar_first`:
+Beispiel mit `Kalendertermin zuerst`:
 
 - Termin im Kalender: `Morgen 08:00 Uhr`
 - Puffer: `30 Minuten`
@@ -73,7 +73,7 @@ Geplantes Ladeende: Morgen 07:30 Uhr
 Geplanter Ladestart: Morgen 06:00 Uhr
 ```
 
-Wenn `calendar_first` gewählt ist und kein Kalender eingetragen ist oder kein Kalendertermin mit `start_time` verfügbar ist, nutzt die Integration die tägliche Fertig-Uhrzeit. Wenn `daily_time_first` gewählt ist, wird die tägliche Fertig-Uhrzeit direkt verwendet.
+Wenn `Kalendertermin zuerst` gewählt ist und kein Kalender eingetragen ist oder kein Kalendertermin mit `start_time` verfügbar ist, nutzt die Integration die tägliche Fertig-Uhrzeit. Wenn `Tägliche Nacht-Uhrzeit zuerst` gewählt ist, wird die tägliche Fertig-Uhrzeit direkt verwendet.
 
 Hinweis: Die Integration nutzt die nächsten Kalendertermin-Attribute der Kalender-Entität (`message`, `start_time`, `end_time`). Für sehr komplexe Kalender mit mehreren parallelen Terminen ist die Kalender-Automation von Home Assistant oft flexibler.
 
@@ -89,7 +89,7 @@ Hinweis: Die Integration nutzt die nächsten Kalendertermin-Attribute der Kalend
 | Nächster Kalendertermin Start | Startzeit des nächsten Kalendertermins, falls verfügbar |
 | Nächster Kalendertermin | Titel des nächsten Kalendertermins, falls verfügbar |
 | Ladeziel Quelle | `daily_time` oder `calendar` |
-| Ladeziel Priorität | `calendar_first` oder `daily_time_first` |
+| Ladeziel Priorität | `Kalendertermin zuerst` oder `Tägliche Nacht-Uhrzeit zuerst` |
 | Ladeplan Status | `not_needed`, `waiting`, `charging_window` oder `late` |
 
 ## Installation
@@ -123,6 +123,10 @@ actions:
 ```
 
 Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
+
+
+Version: 1.0.8
+
 
 ---
 
@@ -176,18 +180,18 @@ calendar.cupra_charging
 In the config flow, also choose the priority:
 
 ```text
-calendar_first
+Calendar event first
 ```
 
 or:
 
 ```text
-daily_time_first
+Daily overnight time first
 ```
 
-With `calendar_first`, the integration uses the next calendar event as the target ready-by time if one is available. With `daily_time_first`, it uses the daily ready-by time as the primary source.
+With `Calendar event first`, the integration uses the next calendar event as the target ready-by time if one is available. With `Daily overnight time first`, it uses the daily ready-by time as the primary source.
 
-Example with `calendar_first`:
+Example with `Calendar event first`:
 
 - Calendar event: `Tomorrow 08:00`
 - Buffer: `30 minutes`
@@ -201,7 +205,7 @@ Planned charge end: Tomorrow 07:30
 Planned charge start: Tomorrow 06:00
 ```
 
-If `calendar_first` is selected and no calendar is configured or no calendar event with `start_time` is available, the integration uses the daily ready-by time. If `daily_time_first` is selected, the daily ready-by time is used directly.
+If `Calendar event first` is selected and no calendar is configured or no calendar event with `start_time` is available, the integration uses the daily ready-by time. If `Daily overnight time first` is selected, the daily ready-by time is used directly.
 
 Note: The integration uses the next-event attributes of the calendar entity (`message`, `start_time`, `end_time`). For complex calendars with multiple overlapping events, Home Assistant calendar automations may be more flexible.
 
@@ -217,7 +221,7 @@ Note: The integration uses the next-event attributes of the calendar entity (`me
 | Next calendar event start | Start time of the next calendar event, if available |
 | Next calendar event | Title of the next calendar event, if available |
 | Target source | `daily_time` or `calendar` |
-| Target source priority | `calendar_first` or `daily_time_first` |
+| Target source priority | `Calendar event first` or `Daily overnight time first` |
 | Charge plan status | `not_needed`, `waiting`, `charging_window` or `late` |
 
 ## Installation
@@ -251,3 +255,6 @@ actions:
 ```
 
 You can stop charging in the same way using the planned charge end sensor.
+
+
+Version: 1.0.8

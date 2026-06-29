@@ -48,18 +48,18 @@ calendar.cupra_ladung
 Zusätzlich wählst du im Config Flow die Priorität:
 
 ```text
-calendar_first
+Kalendertermin zuerst
 ```
 
 oder:
 
 ```text
-daily_time_first
+Tägliche Nacht-Uhrzeit zuerst
 ```
 
-Bei `calendar_first` verwendet die Integration den nächsten Kalendertermin als Ziel-Zeitpunkt, sofern einer verfügbar ist. Bei `daily_time_first` verwendet sie die tägliche Fertig-Uhrzeit als Hauptquelle.
+Bei `Kalendertermin zuerst` verwendet die Integration den nächsten Kalendertermin als Ziel-Zeitpunkt, sofern einer verfügbar ist. Bei `Tägliche Nacht-Uhrzeit zuerst` verwendet sie die tägliche Fertig-Uhrzeit als Hauptquelle.
 
-Beispiel mit `calendar_first`:
+Beispiel mit `Kalendertermin zuerst`:
 
 - Termin im Kalender: `Morgen 08:00 Uhr`
 - Puffer: `30 Minuten`
@@ -73,7 +73,7 @@ Geplantes Ladeende: Morgen 07:30 Uhr
 Geplanter Ladestart: Morgen 06:00 Uhr
 ```
 
-Wenn `calendar_first` gewählt ist und kein Kalender eingetragen ist oder kein Kalendertermin mit `start_time` verfügbar ist, nutzt die Integration die tägliche Fertig-Uhrzeit. Wenn `daily_time_first` gewählt ist, wird die tägliche Fertig-Uhrzeit direkt verwendet.
+Wenn `Kalendertermin zuerst` gewählt ist und kein Kalender eingetragen ist oder kein Kalendertermin mit `start_time` verfügbar ist, nutzt die Integration die tägliche Fertig-Uhrzeit. Wenn `Tägliche Nacht-Uhrzeit zuerst` gewählt ist, wird die tägliche Fertig-Uhrzeit direkt verwendet.
 
 Hinweis: Die Integration nutzt die nächsten Kalendertermin-Attribute der Kalender-Entität (`message`, `start_time`, `end_time`). Für sehr komplexe Kalender mit mehreren parallelen Terminen ist die Kalender-Automation von Home Assistant oft flexibler.
 
@@ -89,7 +89,7 @@ Hinweis: Die Integration nutzt die nächsten Kalendertermin-Attribute der Kalend
 | Nächster Kalendertermin Start | Startzeit des nächsten Kalendertermins, falls verfügbar |
 | Nächster Kalendertermin | Titel des nächsten Kalendertermins, falls verfügbar |
 | Ladeziel Quelle | `daily_time` oder `calendar` |
-| Ladeziel Priorität | `calendar_first` oder `daily_time_first` |
+| Ladeziel Priorität | `Kalendertermin zuerst` oder `Tägliche Nacht-Uhrzeit zuerst` |
 | Ladeplan Status | `not_needed`, `waiting`, `charging_window` oder `late` |
 
 ## Installation
@@ -123,3 +123,6 @@ actions:
 ```
 
 Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
+
+
+Version: 1.0.8

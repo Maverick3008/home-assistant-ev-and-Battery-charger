@@ -10,7 +10,7 @@
           "soc_sensor": "Current battery level sensor",
           "target_soc_entity": "Target charge helper",
           "target_time": "Daily ready-by time",
-          "target_source_priority": "Target source priority",
+          "target_source_priority": "Which ready-by time should be used first?",
           "battery_size_kwh": "Battery size",
           "charge_power_kw": "Charging power",
           "efficiency": "Charging efficiency factor",
@@ -22,7 +22,7 @@
           "soc_sensor": "Entity that reports the current state of charge in percent.",
           "target_soc_entity": "Usually an input_number helper with the desired target charge in percent.",
           "target_time": "The vehicle should be ready by this time every day.",
-          "target_source_priority": "Choose whether the calendar or the daily overnight ready-by time should be used first. Values: calendar_first or daily_time_first.",
+          "target_source_priority": "Choose which ready-by time has priority: the next calendar event or the configured daily overnight time.",
           "battery_size_kwh": "Usable battery capacity in kWh.",
           "charge_power_kw": "Expected charging power in kW.",
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
@@ -38,7 +38,7 @@
           "soc_sensor": "Current battery level sensor",
           "target_soc_entity": "Target charge helper",
           "target_time": "Daily ready-by time",
-          "target_source_priority": "Target source priority",
+          "target_source_priority": "Which ready-by time should be used first?",
           "battery_size_kwh": "Battery size",
           "charge_power_kw": "Charging power",
           "efficiency": "Charging efficiency factor",
@@ -50,7 +50,7 @@
           "soc_sensor": "Entity that reports the current state of charge in percent.",
           "target_soc_entity": "Usually an input_number helper with the desired target charge in percent.",
           "target_time": "The vehicle should be ready by this time every day.",
-          "target_source_priority": "Choose whether the calendar or the daily overnight ready-by time should be used first. Values: calendar_first or daily_time_first.",
+          "target_source_priority": "Choose which ready-by time has priority: the next calendar event or the configured daily overnight time.",
           "battery_size_kwh": "Usable battery capacity in kWh.",
           "charge_power_kw": "Expected charging power in kW.",
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
@@ -68,7 +68,7 @@
       "must_not_be_negative": "The value must not be negative.",
       "invalid_calendar_entity": "Please enter a valid calendar entity, for example calendar.cupra_charging, or leave the field empty.",
       "invalid_number": "Please enter a valid number.",
-      "invalid_target_source_priority": "Please choose calendar_first or daily_time_first."
+      "invalid_target_source_priority": "Please choose Calendar event first or Daily overnight time first."
     },
     "abort": {
       "already_configured": "This charger is already configured.",
@@ -86,7 +86,7 @@
           "soc_sensor": "Current battery level sensor",
           "target_soc_entity": "Target charge helper",
           "target_time": "Daily ready-by time",
-          "target_source_priority": "Target source priority",
+          "target_source_priority": "Which ready-by time should be used first?",
           "battery_size_kwh": "Battery size",
           "charge_power_kw": "Charging power",
           "efficiency": "Charging efficiency factor",
@@ -98,7 +98,7 @@
           "soc_sensor": "Entity that reports the current state of charge in percent.",
           "target_soc_entity": "Usually an input_number helper with the desired target charge in percent.",
           "target_time": "The vehicle should be ready by this time every day.",
-          "target_source_priority": "Choose whether the calendar or the daily overnight ready-by time should be used first. Values: calendar_first or daily_time_first.",
+          "target_source_priority": "Choose which ready-by time has priority: the next calendar event or the configured daily overnight time.",
           "battery_size_kwh": "Usable battery capacity in kWh.",
           "charge_power_kw": "Expected charging power in kW.",
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
@@ -116,7 +116,7 @@
       "must_not_be_negative": "The value must not be negative.",
       "invalid_calendar_entity": "Please enter a valid calendar entity, for example calendar.cupra_charging, or leave the field empty.",
       "invalid_number": "Please enter a valid number.",
-      "invalid_target_source_priority": "Please choose calendar_first or daily_time_first."
+      "invalid_target_source_priority": "Please choose Calendar event first or Daily overnight time first."
     },
     "abort": {
       "unknown_entry": "The existing configuration was not found."
@@ -164,9 +164,17 @@
       "target_source_priority": {
         "name": "Target source priority",
         "state": {
-          "calendar_first": "Calendar first",
-          "daily_time_first": "Daily time first"
+          "calendar_first": "Calendar event first",
+          "daily_time_first": "Daily overnight time first"
         }
+      }
+    }
+  },
+  "selector": {
+    "target_source_priority": {
+      "options": {
+        "calendar_first": "Calendar event first",
+        "daily_time_first": "Daily overnight time first"
       }
     }
   }

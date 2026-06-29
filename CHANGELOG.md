@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.8
+
+- Improved German and English labels for the target source priority selector.
+- Added translated dropdown labels: Calendar event first / Daily overnight time first.
+- Reworked the reconfigure flow to use Home Assistant's safe update-and-reload helper.
+- Simplified the options flow to use Home Assistant's built-in `self.config_entry` handling.
+- Changed option reload handling to use `hass.config_entries.async_reload(entry.entry_id)` instead of manual unload/setup.
+- Avoided double reloads on Home Assistant versions with OptionsFlowWithReload.
+
 ## 1.0.7
 
 - Added configurable target source priority.
