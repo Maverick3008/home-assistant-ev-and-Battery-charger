@@ -27,6 +27,32 @@
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
           "calendar_entity": "Optional: calendar.* Entität. Wenn ein nächster Termin vorhanden ist, wird dessen Startzeit als Fertig-Zeit verwendet. Leer lassen, um nur die tägliche Uhrzeit zu verwenden."
         }
+      },
+      "reconfigure": {
+        "title": "EV and Battery Charger neu konfigurieren",
+        "description": "Passe die bestehende Konfiguration an. Die Integration wird danach automatisch neu geladen.",
+        "data": {
+          "name": "Bezeichnung",
+          "soc_sensor": "Sensor für aktuellen Akkustand",
+          "target_soc_entity": "Helper für Ziel-Ladestand",
+          "target_time": "Tägliche Fertig-Uhrzeit",
+          "battery_size_kwh": "Batteriegröße",
+          "charge_power_kw": "Ladeleistung",
+          "efficiency": "Ladeeffizienz-Faktor",
+          "buffer_minutes": "Puffer vor der Fertig-Uhrzeit",
+          "calendar_entity": "Kalender für nächsten Termin (optional)"
+        },
+        "data_description": {
+          "name": "Beispiel: Cupra Leon oder Hausakku",
+          "soc_sensor": "Entität, die den aktuellen Ladestand in Prozent liefert.",
+          "target_soc_entity": "Normalerweise ein input_number-Helfer mit dem gewünschten Ziel-Ladestand in Prozent.",
+          "target_time": "Zu dieser Uhrzeit soll das Fahrzeug jeden Tag fertig geladen sein.",
+          "battery_size_kwh": "Nutzbare Batteriekapazität in kWh.",
+          "charge_power_kw": "Erwartete Ladeleistung in kW.",
+          "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
+          "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
+          "calendar_entity": "Optional: calendar.* Entität. Wenn ein nächster Termin vorhanden ist, wird dessen Startzeit als Fertig-Zeit verwendet. Leer lassen, um nur die tägliche Uhrzeit zu verwenden."
+        }
       }
     },
     "error": {
@@ -36,10 +62,13 @@
       "must_be_positive": "Der Wert muss größer als 0 sein.",
       "invalid_efficiency": "Die Ladeeffizienz muss größer als 0 und maximal 1 sein, zum Beispiel 0.93.",
       "must_not_be_negative": "Der Wert darf nicht negativ sein.",
-      "invalid_calendar_entity": "Bitte gib eine gültige Kalender-Entität ein, zum Beispiel calendar.ladung_cupra, oder lasse das Feld leer."
+      "invalid_calendar_entity": "Bitte gib eine gültige Kalender-Entität ein, zum Beispiel calendar.ladung_cupra, oder lasse das Feld leer.",
+      "invalid_number": "Bitte gib eine gültige Zahl ein."
     },
     "abort": {
-      "already_configured": "Diese Bezeichnung ist bereits eingerichtet."
+      "already_configured": "Diese Bezeichnung ist bereits eingerichtet.",
+      "unknown_entry": "Die bestehende Konfiguration wurde nicht gefunden.",
+      "reconfigure_successful": "Die Konfiguration wurde aktualisiert."
     }
   },
   "options": {
@@ -78,7 +107,11 @@
       "must_be_positive": "Der Wert muss größer als 0 sein.",
       "invalid_efficiency": "Die Ladeeffizienz muss größer als 0 und maximal 1 sein, zum Beispiel 0.93.",
       "must_not_be_negative": "Der Wert darf nicht negativ sein.",
-      "invalid_calendar_entity": "Bitte gib eine gültige Kalender-Entität ein, zum Beispiel calendar.ladung_cupra, oder lasse das Feld leer."
+      "invalid_calendar_entity": "Bitte gib eine gültige Kalender-Entität ein, zum Beispiel calendar.ladung_cupra, oder lasse das Feld leer.",
+      "invalid_number": "Bitte gib eine gültige Zahl ein."
+    },
+    "abort": {
+      "unknown_entry": "Die bestehende Konfiguration wurde nicht gefunden."
     }
   },
   "entity": {

@@ -35,3 +35,10 @@
 - Config flow setup.
 - Sensors for required charge duration, planned charge start, planned charge end, energy needed and charge plan status.
 - German and English translations.
+
+## 1.0.6
+
+### Fixed
+- Made the existing configuration/options flow more robust.
+- Added an explicit reconfigure flow for already configured entries.
+- Added safer number validation to prevent the configuration dialog from hanging on invalid values.

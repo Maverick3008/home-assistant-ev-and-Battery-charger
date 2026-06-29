@@ -27,6 +27,32 @@
           "buffer_minutes": "The planned charging end is this many minutes before the ready-by time. Default: 30 minutes.",
           "calendar_entity": "Optional: calendar.* entity. If a next event is available, its start time is used as the ready-by time. Leave empty to use only the daily time."
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure EV and Battery Charger",
+        "description": "Change the existing configuration. The integration will reload automatically afterwards.",
+        "data": {
+          "name": "Charger name",
+          "soc_sensor": "Current battery level sensor",
+          "target_soc_entity": "Target charge helper",
+          "target_time": "Daily ready-by time",
+          "battery_size_kwh": "Battery size",
+          "charge_power_kw": "Charging power",
+          "efficiency": "Charging efficiency factor",
+          "buffer_minutes": "Buffer before ready-by time",
+          "calendar_entity": "Calendar for next event (optional)"
+        },
+        "data_description": {
+          "name": "Example: Cupra Leon or Home Battery",
+          "soc_sensor": "Entity that reports the current state of charge in percent.",
+          "target_soc_entity": "Usually an input_number helper with the desired target charge in percent.",
+          "target_time": "The vehicle should be ready by this time every day.",
+          "battery_size_kwh": "Usable battery capacity in kWh.",
+          "charge_power_kw": "Expected charging power in kW.",
+          "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
+          "buffer_minutes": "The planned charging end is this many minutes before the ready-by time. Default: 30 minutes.",
+          "calendar_entity": "Optional: calendar.* entity. If a next event is available, its start time is used as the ready-by time. Leave empty to use only the daily time."
+        }
       }
     },
     "error": {
@@ -36,10 +62,13 @@
       "must_be_positive": "The value must be greater than 0.",
       "invalid_efficiency": "Charging efficiency must be greater than 0 and no more than 1, for example 0.93.",
       "must_not_be_negative": "The value must not be negative.",
-      "invalid_calendar_entity": "Please enter a valid calendar entity, for example calendar.cupra_charging, or leave the field empty."
+      "invalid_calendar_entity": "Please enter a valid calendar entity, for example calendar.cupra_charging, or leave the field empty.",
+      "invalid_number": "Please enter a valid number."
     },
     "abort": {
-      "already_configured": "This charger is already configured."
+      "already_configured": "This charger is already configured.",
+      "unknown_entry": "The existing configuration was not found.",
+      "reconfigure_successful": "The configuration has been updated."
     }
   },
   "options": {
@@ -78,7 +107,11 @@
       "must_be_positive": "The value must be greater than 0.",
       "invalid_efficiency": "Charging efficiency must be greater than 0 and no more than 1, for example 0.93.",
       "must_not_be_negative": "The value must not be negative.",
-      "invalid_calendar_entity": "Please enter a valid calendar entity, for example calendar.cupra_charging, or leave the field empty."
+      "invalid_calendar_entity": "Please enter a valid calendar entity, for example calendar.cupra_charging, or leave the field empty.",
+      "invalid_number": "Please enter a valid number."
+    },
+    "abort": {
+      "unknown_entry": "The existing configuration was not found."
     }
   },
   "entity": {
