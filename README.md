@@ -13,8 +13,8 @@ Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder op
 - Optional: Ladeplanung anhand des nächsten Home-Assistant-Kalendertermins
 - Auswahl der Priorität: Kalender zuerst oder tägliche Uhrzeit zuerst
 - Fallback auf tägliche Fertig-Uhrzeit, wenn Kalender zuerst gewählt ist und kein Kalendertermin verfügbar ist
-- Ziel-Ladestand über `input_number`
-- Aktueller Akkustand über Sensor-Entität
+- Eigene Zahl-Entität für den Ziel-Ladestand (`number.*`)
+- Aktueller Akkustand direkt im Config Flow auswählbar
 - Deutsche und englische Übersetzungen
 - Icon, Logo und Brand-Dateien enthalten
 
@@ -92,6 +92,12 @@ Hinweis: Die Integration nutzt die nächsten Kalendertermin-Attribute der Kalend
 | Ladeziel Priorität | `Kalendertermin zuerst` oder `Tägliche Nacht-Uhrzeit zuerst` |
 | Ladeplan Status | `not_needed`, `waiting`, `charging_window` oder `late` |
 
+Zusätzlich wird eine Zahl-Entität erstellt:
+
+| Entität | Bedeutung |
+|---|---|
+| Ziel-Ladestand | Ziel-SOC in Prozent, den du später direkt in Home Assistant ändern kannst |
+
 ### Feste Ladedauer im laufenden Ladefenster
 
 Sobald das Ladefenster einmal erreicht wurde, wird die zu diesem Zeitpunkt berechnete **Benötigte Ladedauer** eingefroren. Während des laufenden Ladefensters wird die Dauer nicht mehr durch steigenden SOC neu berechnet oder verkürzt.
@@ -112,7 +118,8 @@ locked_charge_finished_at
 2. Starte Home Assistant neu.
 3. Gehe zu **Einstellungen → Geräte & Dienste → Integration hinzufügen**.
 4. Suche nach **EV and Battery Charger**.
-5. Trage deine Entitäten und Ladeparameter ein.
+5. Wähle den aktuellen Ladestand, optional den Kalender und trage deine Ladeparameter ein.
+6. Danach kannst du den Ziel-Ladestand über die neue Entität **Ziel-Ladestand** ändern.
 
 ## Beispiel-Automation zum Laden
 
@@ -139,7 +146,7 @@ actions:
 Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
 
 
-Version: 1.0.10
+Version: 1.0.11
 
 
 ---
@@ -159,7 +166,7 @@ The integration can use a fixed daily ready-by time or optionally use the **next
 - Optional: charging plan based on the next Home Assistant calendar event
 - Priority selection: calendar first or daily time first
 - Falls back to the daily ready-by time when calendar first is selected and no calendar event is available
-- Target charge through an `input_number`
+- Dedicated target state of charge number entity (`number.*`)
 - Current state of charge through a sensor entity
 - German and English translations
 - Icon, logo and brand files included
@@ -238,6 +245,12 @@ Note: The integration uses the next-event attributes of the calendar entity (`me
 | Target source priority | `Calendar event first` or `Daily overnight time first` |
 | Charge plan status | `not_needed`, `waiting`, `charging_window` or `late` |
 
+A number entity is also created:
+
+| Entity | Meaning |
+|---|---|
+| Target state of charge | Target SOC in percent that you can change directly in Home Assistant later |
+
 ### Fixed charging duration during an active charging window
 
 Once the charging window has been reached, the **required charge duration** calculated at that moment is frozen. During the active charging window, the duration is no longer recalculated or shortened by rising SOC values.
@@ -258,7 +271,8 @@ locked_charge_finished_at
 2. Restart Home Assistant.
 3. Go to **Settings → Devices & services → Add integration**.
 4. Search for **EV and Battery Charger**.
-5. Enter your entities and charging parameters.
+5. Select the current state of charge entity, optionally select a calendar, and enter your charging parameters.
+6. Afterwards, change the target SOC through the new **Target state of charge** number entity.
 
 ## Example charging automation
 
@@ -285,4 +299,4 @@ actions:
 You can stop charging in the same way using the planned charge end sensor.
 
 
-Version: 1.0.10
+Version: 1.0.11

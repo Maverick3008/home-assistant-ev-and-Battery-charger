@@ -18,7 +18,7 @@ from .const import (
     CONF_EFFICIENCY,
     CONF_NAME,
     CONF_SOC_SENSOR,
-    CONF_TARGET_SOC_ENTITY,
+    CONF_TARGET_SOC,
     CONF_TARGET_SOURCE_PRIORITY,
     CONF_TARGET_TIME,
     DEFAULT_BATTERY_SIZE_KWH,
@@ -27,6 +27,7 @@ from .const import (
     DEFAULT_CHARGE_POWER_KW,
     DEFAULT_EFFICIENCY,
     DEFAULT_NAME,
+    DEFAULT_TARGET_SOC,
     DEFAULT_TARGET_SOURCE_PRIORITY,
     DEFAULT_TARGET_TIME,
     DOMAIN,
@@ -34,20 +35,8 @@ from .const import (
 )
 
 
-def _required_key(key: str, default: Any | None = None) -> vol.Required:
-    """Return a required schema key, optionally with a default value."""
-    if default is None:
-        return vol.Required(key)
-    return vol.Required(key, default=default)
-
-
 def _target_priority_selector() -> selector.SelectSelector:
-    """Return the target source priority selector.
-
-    The selector stores the stable internal values, while Home Assistant uses
-    the translation key to display friendly labels such as "Kalendertermin
-    zuerst" instead of raw values like "calendar_first".
-    """
+    """Return the target source priority selector with translated labels."""
     return selector.SelectSelector(
         selector.SelectSelectorConfig(
             options=list(TARGET_SOURCE_PRIORITY_OPTIONS),
@@ -56,38 +45,57 @@ def _target_priority_selector() -> selector.SelectSelector:
     )
 
 
+def _soc_entity_selector() -> selector.EntitySelector:
+    """Return selector for entities that can provide a SOC percentage."""
+    return selector.EntitySelector(
+        selector.EntitySelectorConfig(domain=["sensor", "number", "input_number"])
+    )
+
+
+def _calendar_entity_selector() -> selector.EntitySelector:
+    """Return selector for a Home Assistant calendar entity."""
+    return selector.EntitySelector(selector.EntitySelectorConfig(domain="calendar"))
+
+
+def _target_soc_selector() -> selector.NumberSelector:
+    """Return selector for the internal target SOC number."""
+    return selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=0,
+            max=100,
+            step=1,
+            unit_of_measurement="%",
+        )
+    )
+
+
 def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     """Build the config/options schema."""
     defaults = defaults or {}
-    return vol.Schema(
+    schema: dict[Any, Any] = {
+        vol.Required(CONF_NAME, default=defaults.get(CONF_NAME, DEFAULT_NAME)): str,
+    }
+
+    soc_default = defaults.get(CONF_SOC_SENSOR)
+    if soc_default:
+        schema[vol.Required(CONF_SOC_SENSOR, default=soc_default)] = _soc_entity_selector()
+    else:
+        schema[vol.Required(CONF_SOC_SENSOR)] = _soc_entity_selector()
+
+    schema.update(
         {
             vol.Required(
-                CONF_NAME,
-                default=defaults.get(CONF_NAME, DEFAULT_NAME),
-            ): str,
-            _required_key(
-                CONF_SOC_SENSOR,
-                defaults.get(CONF_SOC_SENSOR),
-            ): str,
-            _required_key(
-                CONF_TARGET_SOC_ENTITY,
-                defaults.get(CONF_TARGET_SOC_ENTITY),
-            ): str,
+                CONF_TARGET_SOC,
+                default=defaults.get(CONF_TARGET_SOC, DEFAULT_TARGET_SOC),
+            ): _target_soc_selector(),
             vol.Required(
                 CONF_TARGET_TIME,
                 default=defaults.get(CONF_TARGET_TIME, DEFAULT_TARGET_TIME),
-            ): str,
+            ): selector.TimeSelector(),
             vol.Required(
                 CONF_TARGET_SOURCE_PRIORITY,
-                default=defaults.get(
-                    CONF_TARGET_SOURCE_PRIORITY,
-                    DEFAULT_TARGET_SOURCE_PRIORITY,
-                ),
+                default=defaults.get(CONF_TARGET_SOURCE_PRIORITY, DEFAULT_TARGET_SOURCE_PRIORITY),
             ): _target_priority_selector(),
-            vol.Optional(
-                CONF_CALENDAR_ENTITY,
-                default=defaults.get(CONF_CALENDAR_ENTITY, DEFAULT_CALENDAR_ENTITY),
-            ): str,
             vol.Required(
                 CONF_BATTERY_SIZE_KWH,
                 default=defaults.get(CONF_BATTERY_SIZE_KWH, DEFAULT_BATTERY_SIZE_KWH),
@@ -107,6 +115,13 @@ def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
         }
     )
 
+    calendar_default = defaults.get(CONF_CALENDAR_ENTITY, DEFAULT_CALENDAR_ENTITY)
+    if calendar_default:
+        schema[vol.Optional(CONF_CALENDAR_ENTITY, default=calendar_default)] = _calendar_entity_selector()
+    else:
+        schema[vol.Optional(CONF_CALENDAR_ENTITY)] = _calendar_entity_selector()
+
+    return vol.Schema(schema)
 
 def _as_float(user_input: dict[str, Any], key: str) -> float | None:
     """Return a float from user input, or None if conversion fails."""
@@ -124,6 +139,21 @@ def _as_int(user_input: dict[str, Any], key: str) -> int | None:
         return None
 
 
+def _validate_time(value: Any) -> bool:
+    """Validate a time selector or text time value."""
+    if hasattr(value, "hour") and hasattr(value, "minute"):
+        return True
+    try:
+        parts = [int(part) for part in str(value).split(":")]
+        if len(parts) not in (2, 3):
+            return False
+        hour, minute = parts[0], parts[1]
+        second = parts[2] if len(parts) == 3 else 0
+        return 0 <= hour <= 23 and 0 <= minute <= 59 and 0 <= second <= 59
+    except (TypeError, ValueError):
+        return False
+
+
 def _validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate user input and return config flow errors."""
     errors: dict[str, str] = {}
@@ -136,24 +166,17 @@ def _validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     if "." not in soc_sensor:
         errors[CONF_SOC_SENSOR] = "invalid_entity"
 
-    target_soc_entity = str(user_input.get(CONF_TARGET_SOC_ENTITY, "")).strip()
-    if "." not in target_soc_entity:
-        errors[CONF_TARGET_SOC_ENTITY] = "invalid_entity"
+    target_soc = _as_float(user_input, CONF_TARGET_SOC)
+    if target_soc is None:
+        errors[CONF_TARGET_SOC] = "invalid_number"
+    elif not (0 <= target_soc <= 100):
+        errors[CONF_TARGET_SOC] = "invalid_target_soc"
 
-    calendar_entity = str(user_input.get(CONF_CALENDAR_ENTITY, "")).strip()
+    calendar_entity = str(user_input.get(CONF_CALENDAR_ENTITY, "") or "").strip()
     if calendar_entity and not calendar_entity.startswith("calendar."):
         errors[CONF_CALENDAR_ENTITY] = "invalid_calendar_entity"
 
-    target_time = str(user_input.get(CONF_TARGET_TIME, "")).strip()
-    try:
-        parts = [int(part) for part in target_time.split(":")]
-        if len(parts) not in (2, 3):
-            raise ValueError
-        hour, minute = parts[0], parts[1]
-        second = parts[2] if len(parts) == 3 else 0
-        if not (0 <= hour <= 23 and 0 <= minute <= 59 and 0 <= second <= 59):
-            raise ValueError
-    except (TypeError, ValueError):
+    if not _validate_time(user_input.get(CONF_TARGET_TIME, "")):
         errors[CONF_TARGET_TIME] = "invalid_time"
 
     target_source_priority = str(
@@ -189,17 +212,31 @@ def _validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     return errors
 
 
+def _normalize_time(value: Any) -> str:
+    """Normalize a time selector value to HH:MM:SS."""
+    if hasattr(value, "hour") and hasattr(value, "minute"):
+        second = getattr(value, "second", 0)
+        return f"{value.hour:02d}:{value.minute:02d}:{second:02d}"
+    text = str(value).strip()
+    parts = text.split(":")
+    if len(parts) == 2:
+        return f"{int(parts[0]):02d}:{int(parts[1]):02d}:00"
+    if len(parts) == 3:
+        return f"{int(parts[0]):02d}:{int(parts[1]):02d}:{int(parts[2]):02d}"
+    return text
+
+
 def _normalize_input(user_input: dict[str, Any]) -> dict[str, Any]:
-    """Normalize text values before storing them."""
+    """Normalize values before storing them."""
     normalized = dict(user_input)
     normalized[CONF_NAME] = str(normalized.get(CONF_NAME, "")).strip()
     normalized[CONF_SOC_SENSOR] = str(normalized.get(CONF_SOC_SENSOR, "")).strip()
-    normalized[CONF_TARGET_SOC_ENTITY] = str(normalized.get(CONF_TARGET_SOC_ENTITY, "")).strip()
-    normalized[CONF_TARGET_TIME] = str(normalized.get(CONF_TARGET_TIME, "")).strip()
+    normalized[CONF_TARGET_SOC] = float(normalized.get(CONF_TARGET_SOC, DEFAULT_TARGET_SOC))
+    normalized[CONF_TARGET_TIME] = _normalize_time(normalized.get(CONF_TARGET_TIME, DEFAULT_TARGET_TIME))
     normalized[CONF_TARGET_SOURCE_PRIORITY] = str(
         normalized.get(CONF_TARGET_SOURCE_PRIORITY, DEFAULT_TARGET_SOURCE_PRIORITY)
     ).strip()
-    normalized[CONF_CALENDAR_ENTITY] = str(normalized.get(CONF_CALENDAR_ENTITY, "")).strip()
+    normalized[CONF_CALENDAR_ENTITY] = str(normalized.get(CONF_CALENDAR_ENTITY, "") or "").strip()
     normalized[CONF_BATTERY_SIZE_KWH] = float(normalized[CONF_BATTERY_SIZE_KWH])
     normalized[CONF_CHARGE_POWER_KW] = float(normalized[CONF_CHARGE_POWER_KW])
     normalized[CONF_EFFICIENCY] = float(normalized[CONF_EFFICIENCY])
@@ -207,16 +244,21 @@ def _normalize_input(user_input: dict[str, Any]) -> dict[str, Any]:
     return normalized
 
 
-_OPTIONS_FLOW_BASE = getattr(
-    config_entries, "OptionsFlowWithReload", config_entries.OptionsFlow
-)
+def _migrate_defaults(defaults: dict[str, Any]) -> dict[str, Any]:
+    """Return defaults compatible with older config entries."""
+    migrated = dict(defaults)
+    migrated.setdefault(CONF_TARGET_SOC, DEFAULT_TARGET_SOC)
+    return migrated
+
+
+_OPTIONS_FLOW_BASE = getattr(config_entries, "OptionsFlowWithReload", config_entries.OptionsFlow)
 
 
 class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for EV and Battery Charger."""
 
     VERSION = 1
-    MINOR_VERSION = 8
+    MINOR_VERSION = 11
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -225,16 +267,16 @@ class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            user_input = _normalize_input(user_input)
             errors = _validate_input(user_input)
             if not errors:
+                user_input = _normalize_input(user_input)
                 await self.async_set_unique_id(slugify(user_input[CONF_NAME]))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_build_schema(user_input),
+            data_schema=_build_schema(_migrate_defaults(user_input or {})),
             errors=errors,
         )
 
@@ -243,27 +285,34 @@ class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Handle Home Assistant's reconfigure action for an existing entry."""
         entry = self._get_reconfigure_entry()
-        current = {**entry.data, **entry.options}
+        current = _migrate_defaults({**entry.data, **entry.options})
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            user_input = _normalize_input(user_input)
             errors = _validate_input(user_input)
             if not errors:
-                # Keep the same unique ID, update the existing entry, and let
-                # Home Assistant reload the entry safely after the flow ends.
+                user_input = _normalize_input(user_input)
                 await self.async_set_unique_id(entry.unique_id or slugify(user_input[CONF_NAME]))
                 self._abort_if_unique_id_mismatch()
-                return self.async_update_reload_and_abort(
+                if hasattr(self, "async_update_reload_and_abort"):
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates=user_input,
+                        title=user_input[CONF_NAME],
+                        reason="reconfigure_successful",
+                    )
+
+                self.hass.config_entries.async_update_entry(
                     entry,
-                    data_updates=user_input,
+                    data=user_input,
                     title=user_input[CONF_NAME],
-                    reason="reconfigure_successful",
                 )
+                await self.hass.config_entries.async_reload(entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=_build_schema(user_input or current),
+            data_schema=_build_schema(_migrate_defaults(user_input or current)),
             errors=errors,
         )
 
@@ -286,14 +335,14 @@ class EVAndBatteryChargerOptionsFlow(_OPTIONS_FLOW_BASE):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            user_input = _normalize_input(user_input)
             errors = _validate_input(user_input)
             if not errors:
+                user_input = _normalize_input(user_input)
                 return self.async_create_entry(title="", data=user_input)
 
-        current = {**self.config_entry.data, **self.config_entry.options}
+        current = _migrate_defaults({**self.config_entry.data, **self.config_entry.options})
         return self.async_show_form(
             step_id="init",
-            data_schema=_build_schema(user_input or current),
+            data_schema=_build_schema(_migrate_defaults(user_input or current)),
             errors=errors,
         )

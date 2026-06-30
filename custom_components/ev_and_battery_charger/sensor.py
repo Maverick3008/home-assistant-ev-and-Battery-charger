@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_interval
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
@@ -34,6 +35,7 @@ from .const import (
     CONF_EFFICIENCY,
     CONF_NAME,
     CONF_SOC_SENSOR,
+    CONF_TARGET_SOC,
     CONF_TARGET_SOC_ENTITY,
     CONF_TARGET_TIME,
     CONF_TARGET_SOURCE_PRIORITY,
@@ -42,10 +44,12 @@ from .const import (
     DEFAULT_CHARGE_POWER_KW,
     DEFAULT_EFFICIENCY,
     DEFAULT_NAME,
+    DEFAULT_TARGET_SOC,
     DEFAULT_TARGET_SOURCE_PRIORITY,
     DEFAULT_TARGET_TIME,
     DOMAIN,
     INVALID_STATES,
+    SIGNAL_TARGET_SOC_UPDATED,
     TARGET_PRIORITY_CALENDAR_FIRST,
     TARGET_PRIORITY_DAILY_TIME_FIRST,
     TARGET_SOURCE_CALENDAR,
@@ -216,6 +220,32 @@ class EVAndBatteryChargerCalculator:
         except (TypeError, ValueError):
             return None
 
+    def _get_target_soc(self) -> float | None:
+        """Return the configured target SOC.
+
+        Version 1.0.11 adds an internal number entity for the target SOC. Older
+        entries may still contain a target_soc_entity from previous releases;
+        that value is used only as a migration fallback until the number entity
+        has restored or stored its own value.
+        """
+        entry_data = self.hass.data.get(DOMAIN, {}).get(self.entry.entry_id, {})
+        if isinstance(entry_data, dict) and "target_soc" in entry_data:
+            try:
+                return float(entry_data["target_soc"])
+            except (TypeError, ValueError):
+                pass
+
+        legacy_target_entity = str(self.config.get(CONF_TARGET_SOC_ENTITY, "") or "").strip()
+        if legacy_target_entity:
+            legacy_value = self._get_float_state(legacy_target_entity)
+            if legacy_value is not None:
+                return legacy_value
+
+        try:
+            return float(self.config.get(CONF_TARGET_SOC, DEFAULT_TARGET_SOC))
+        except (TypeError, ValueError):
+            return DEFAULT_TARGET_SOC
+
     @staticmethod
     def _parse_time(value: str | time) -> time:
         """Parse a Home Assistant time selector value."""
@@ -295,10 +325,9 @@ class EVAndBatteryChargerCalculator:
         """Calculate the current charging plan."""
         config = self.config
         soc_entity = config[CONF_SOC_SENSOR]
-        target_soc_entity = config[CONF_TARGET_SOC_ENTITY]
 
         current_soc = self._get_float_state(soc_entity)
-        target_soc = self._get_float_state(target_soc_entity)
+        target_soc = self._get_target_soc()
         if current_soc is None or target_soc is None:
             return None
 
@@ -482,7 +511,10 @@ class EVAndBatteryChargerSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to source entity changes and minute ticks."""
         config = self.calculator.config
-        watched_entities = [config[CONF_SOC_SENSOR], config[CONF_TARGET_SOC_ENTITY]]
+        watched_entities = [config[CONF_SOC_SENSOR]]
+        legacy_target_entity = str(config.get(CONF_TARGET_SOC_ENTITY, "") or "").strip()
+        if legacy_target_entity:
+            watched_entities.append(legacy_target_entity)
         calendar_entity = str(config.get(CONF_CALENDAR_ENTITY, "")).strip()
         if calendar_entity:
             watched_entities.append(calendar_entity)
@@ -501,10 +533,22 @@ class EVAndBatteryChargerSensor(SensorEntity):
                 timedelta(minutes=1),
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self.entry.entry_id}_{SIGNAL_TARGET_SOC_UPDATED}",
+                self._async_target_soc_changed,
+            )
+        )
 
     @callback
     def _async_source_changed(self, event: Event) -> None:
         """Handle source entity state changes."""
+        self.async_write_ha_state()
+
+    @callback
+    def _async_target_soc_changed(self) -> None:
+        """Handle target SOC number changes."""
         self.async_write_ha_state()
 
     @callback
@@ -562,7 +606,8 @@ class EVAndBatteryChargerSensor(SensorEntity):
             "minutes_until_start": calculation.minutes_until_start,
             "minutes_until_end": calculation.minutes_until_end,
             "source_soc_entity": self.calculator.config[CONF_SOC_SENSOR],
-            "target_soc_entity": self.calculator.config[CONF_TARGET_SOC_ENTITY],
+            "target_soc_source": "integration_number",
+            "legacy_target_soc_entity": self.calculator.config.get(CONF_TARGET_SOC_ENTITY),
             "calendar_entity": calculation.calendar_entity,
             "calendar_event_title": calculation.calendar_event_title,
             "calendar_event_start": calculation.calendar_event_start.isoformat() if calculation.calendar_event_start else None,

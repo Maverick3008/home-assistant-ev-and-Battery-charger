@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.11
+
+- Added entity selectors to the config/options flow for the current SOC entity and optional calendar entity.
+- Added an internal **Target state of charge** number entity so the target SOC can be changed directly in Home Assistant.
+- Removed the need for a separate external `input_number` target SOC helper for new setups.
+- Kept migration fallback for older configs that still contain `target_soc_entity`.
+
 ## 1.0.10
 
 - Change charge-window behavior: once a charging window starts, the initially calculated required duration is frozen.

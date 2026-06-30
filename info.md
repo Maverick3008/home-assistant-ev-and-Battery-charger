@@ -1,5 +1,1 @@
-# EV and Battery Charger
-
-Calculates EV or battery charging duration, planned start/end time, and charge-plan status from current SOC, target SOC, charging power, efficiency, optional calendar events, and a daily fallback time.
-
-Version: 1.0.10
+EV and Battery Charger calculates charging duration, planned charge start and planned charge end for an EV, plug-in hybrid or battery storage system. It supports a daily ready time, optional calendar-based charging, selectable entities in the config flow and an internal target state of charge number entity.

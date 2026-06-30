@@ -4,71 +4,72 @@
     "step": {
       "user": {
         "title": "EV and Battery Charger",
-        "description": "Calculate the required charging duration, planned start time and planned end time for an EV, plug-in hybrid or battery storage system. Optionally, the next event from a Home Assistant calendar can be used as the ready-by time; the new priority setting lets you choose whether the calendar or the daily ready-by time is used first.",
+        "description": "Calculates charging duration, planned charging start, and planned charging end for an EV, plug-in hybrid, or battery storage system. The current charge entity and optional calendar can now be selected directly. The target state of charge is provided as a dedicated number entity by the integration.",
         "data": {
-          "name": "Charger name",
-          "soc_sensor": "Current battery level sensor",
-          "target_soc_entity": "Target charge helper",
-          "target_time": "Daily ready-by time",
-          "target_source_priority": "Which ready-by time should be used first?",
+          "name": "Name",
+          "soc_sensor": "Current state of charge",
+          "target_soc": "Initial target state of charge",
+          "target_time": "Daily ready time",
+          "target_source_priority": "Which target time should be used first?",
           "battery_size_kwh": "Battery size",
           "charge_power_kw": "Charging power",
           "efficiency": "Charging efficiency factor",
-          "buffer_minutes": "Buffer before ready-by time",
+          "buffer_minutes": "Buffer before ready time",
           "calendar_entity": "Calendar for next event (optional)"
         },
         "data_description": {
-          "name": "Example: Cupra Leon or Home Battery",
-          "soc_sensor": "Entity that reports the current state of charge in percent.",
-          "target_soc_entity": "Usually an input_number helper with the desired target charge in percent.",
-          "target_time": "The vehicle should be ready by this time every day.",
-          "target_source_priority": "Choose which ready-by time has priority: the next calendar event or the configured daily overnight time.",
+          "name": "Example: Cupra Leon or home battery",
+          "soc_sensor": "Select the entity that provides the current state of charge in percent, for example sensor.garage_homeassistant_batterie.",
+          "target_soc": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
+          "target_time": "The vehicle should be ready every day at this time.",
+          "target_source_priority": "Choose which target time has priority: the next calendar event or the configured daily overnight time.",
           "battery_size_kwh": "Usable battery capacity in kWh.",
           "charge_power_kw": "Expected charging power in kW.",
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
-          "buffer_minutes": "The planned charging end is this many minutes before the ready-by time. Default: 30 minutes.",
-          "calendar_entity": "Optional: calendar.* entity. If a next event is available, its start time is used as the ready-by time. Leave empty to use only the daily time."
+          "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
+          "calendar_entity": "Optional: select a calendar.* entity. If a next event is available, its start time can be used as the ready time."
         }
       },
       "reconfigure": {
         "title": "Reconfigure EV and Battery Charger",
-        "description": "Change the existing configuration. The integration will reload automatically afterwards.",
+        "description": "Adjust the existing configuration. The integration will be reloaded automatically afterwards.",
         "data": {
-          "name": "Charger name",
-          "soc_sensor": "Current battery level sensor",
-          "target_soc_entity": "Target charge helper",
-          "target_time": "Daily ready-by time",
-          "target_source_priority": "Which ready-by time should be used first?",
+          "name": "Name",
+          "soc_sensor": "Current state of charge",
+          "target_soc": "Initial target state of charge",
+          "target_time": "Daily ready time",
+          "target_source_priority": "Which target time should be used first?",
           "battery_size_kwh": "Battery size",
           "charge_power_kw": "Charging power",
           "efficiency": "Charging efficiency factor",
-          "buffer_minutes": "Buffer before ready-by time",
+          "buffer_minutes": "Buffer before ready time",
           "calendar_entity": "Calendar for next event (optional)"
         },
         "data_description": {
-          "name": "Example: Cupra Leon or Home Battery",
-          "soc_sensor": "Entity that reports the current state of charge in percent.",
-          "target_soc_entity": "Usually an input_number helper with the desired target charge in percent.",
-          "target_time": "The vehicle should be ready by this time every day.",
-          "target_source_priority": "Choose which ready-by time has priority: the next calendar event or the configured daily overnight time.",
+          "name": "Example: Cupra Leon or home battery",
+          "soc_sensor": "Select the entity that provides the current state of charge in percent, for example sensor.garage_homeassistant_batterie.",
+          "target_soc": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
+          "target_time": "The vehicle should be ready every day at this time.",
+          "target_source_priority": "Choose which target time has priority: the next calendar event or the configured daily overnight time.",
           "battery_size_kwh": "Usable battery capacity in kWh.",
           "charge_power_kw": "Expected charging power in kW.",
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
-          "buffer_minutes": "The planned charging end is this many minutes before the ready-by time. Default: 30 minutes.",
-          "calendar_entity": "Optional: calendar.* entity. If a next event is available, its start time is used as the ready-by time. Leave empty to use only the daily time."
+          "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
+          "calendar_entity": "Optional: select a calendar.* entity. If a next event is available, its start time can be used as the ready time."
         }
       }
     },
     "error": {
       "empty_name": "Please enter a name.",
-      "invalid_entity": "Please enter a valid entity, for example sensor.garage_homeassistant_batterie.",
+      "invalid_entity": "Please select a valid entity.",
       "invalid_time": "Please enter the time as HH:MM or HH:MM:SS, for example 06:00.",
       "must_be_positive": "The value must be greater than 0.",
       "invalid_efficiency": "Charging efficiency must be greater than 0 and no more than 1, for example 0.93.",
       "must_not_be_negative": "The value must not be negative.",
       "invalid_calendar_entity": "Please enter a valid calendar entity, for example calendar.cupra_charging, or leave the field empty.",
       "invalid_number": "Please enter a valid number.",
-      "invalid_target_source_priority": "Please choose Calendar event first or Daily overnight time first."
+      "invalid_target_source_priority": "Please choose Calendar event first or Daily overnight time first.",
+      "invalid_target_soc": "The target state of charge must be between 0 and 100%."
     },
     "abort": {
       "already_configured": "This charger is already configured.",
@@ -80,43 +81,44 @@
     "step": {
       "init": {
         "title": "EV and Battery Charger options",
-        "description": "Adjust the entities, optional calendar, priority and charging parameters used for the charging plan.",
+        "description": "Adjust the entities, optional calendar, priority, and charging parameters for the charging plan.",
         "data": {
-          "name": "Charger name",
-          "soc_sensor": "Current battery level sensor",
-          "target_soc_entity": "Target charge helper",
-          "target_time": "Daily ready-by time",
-          "target_source_priority": "Which ready-by time should be used first?",
+          "name": "Name",
+          "soc_sensor": "Current state of charge",
+          "target_soc": "Initial target state of charge",
+          "target_time": "Daily ready time",
+          "target_source_priority": "Which target time should be used first?",
           "battery_size_kwh": "Battery size",
           "charge_power_kw": "Charging power",
           "efficiency": "Charging efficiency factor",
-          "buffer_minutes": "Buffer before ready-by time",
+          "buffer_minutes": "Buffer before ready time",
           "calendar_entity": "Calendar for next event (optional)"
         },
         "data_description": {
-          "name": "Example: Cupra Leon or Home Battery",
-          "soc_sensor": "Entity that reports the current state of charge in percent.",
-          "target_soc_entity": "Usually an input_number helper with the desired target charge in percent.",
-          "target_time": "The vehicle should be ready by this time every day.",
-          "target_source_priority": "Choose which ready-by time has priority: the next calendar event or the configured daily overnight time.",
+          "name": "Example: Cupra Leon or home battery",
+          "soc_sensor": "Select the entity that provides the current state of charge in percent, for example sensor.garage_homeassistant_batterie.",
+          "target_soc": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
+          "target_time": "The vehicle should be ready every day at this time.",
+          "target_source_priority": "Choose which target time has priority: the next calendar event or the configured daily overnight time.",
           "battery_size_kwh": "Usable battery capacity in kWh.",
           "charge_power_kw": "Expected charging power in kW.",
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
-          "buffer_minutes": "The planned charging end is this many minutes before the ready-by time. Default: 30 minutes.",
-          "calendar_entity": "Optional: calendar.* entity. If a next event is available, its start time is used as the ready-by time. Leave empty to use only the daily time."
+          "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
+          "calendar_entity": "Optional: select a calendar.* entity. If a next event is available, its start time can be used as the ready time."
         }
       }
     },
     "error": {
       "empty_name": "Please enter a name.",
-      "invalid_entity": "Please enter a valid entity, for example sensor.garage_homeassistant_batterie.",
+      "invalid_entity": "Please select a valid entity.",
       "invalid_time": "Please enter the time as HH:MM or HH:MM:SS, for example 06:00.",
       "must_be_positive": "The value must be greater than 0.",
       "invalid_efficiency": "Charging efficiency must be greater than 0 and no more than 1, for example 0.93.",
       "must_not_be_negative": "The value must not be negative.",
       "invalid_calendar_entity": "Please enter a valid calendar entity, for example calendar.cupra_charging, or leave the field empty.",
       "invalid_number": "Please enter a valid number.",
-      "invalid_target_source_priority": "Please choose Calendar event first or Daily overnight time first."
+      "invalid_target_source_priority": "Please choose Calendar event first or Daily overnight time first.",
+      "invalid_target_soc": "The target state of charge must be between 0 and 100%."
     },
     "abort": {
       "unknown_entry": "The existing configuration was not found."
@@ -167,6 +169,11 @@
           "calendar_first": "Calendar event first",
           "daily_time_first": "Daily overnight time first"
         }
+      }
+    },
+    "number": {
+      "target_soc": {
+        "name": "Target state of charge"
       }
     }
   },

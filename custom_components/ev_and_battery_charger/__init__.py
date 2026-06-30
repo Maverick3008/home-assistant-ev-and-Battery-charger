@@ -6,14 +6,20 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import CONF_TARGET_SOC, DEFAULT_TARGET_SOC, DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up EV and Battery Charger from a config entry."""
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry
+    configured_target_soc = entry.options.get(
+        CONF_TARGET_SOC, entry.data.get(CONF_TARGET_SOC, DEFAULT_TARGET_SOC)
+    )
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "entry": entry,
+        "target_soc": float(configured_target_soc),
+    }
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # On Home Assistant versions without OptionsFlowWithReload we still need a
