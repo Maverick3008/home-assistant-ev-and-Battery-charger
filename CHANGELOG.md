@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.10
+
+- Change charge-window behavior: once a charging window starts, the initially calculated required duration is frozen.
+- SOC changes during an active charging window no longer recalculate or shorten the required duration.
+- After the frozen required duration has elapsed, the status changes directly to `not_needed` for the current charge target.
+- Added diagnostic attributes for the locked runtime: `locked_duration_minutes`, `locked_charge_started_at`, and `locked_charge_finished_at`.
+
+## 1.0.9
+
+- Added charge-window locking. Once the charging window has started, the status stays in `charging_window` until the target SOC is reached or the planned end time has passed.
+- Prevented the status from jumping back to `waiting` while charging, when the remaining charge duration becomes shorter and the calculated start time would move forward.
+- Added `charging_window_locked` as a diagnostic attribute.
+
 ## 1.0.8
 
 - Improved German and English labels for the target source priority selector.

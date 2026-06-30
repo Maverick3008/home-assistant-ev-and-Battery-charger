@@ -81,6 +81,10 @@ class ChargeCalculation:
     status: str
     minutes_until_start: int
     minutes_until_end: int
+    charging_window_locked: bool
+    locked_duration_minutes: int | None
+    locked_charge_started_at: datetime | None
+    locked_charge_finished_at: datetime | None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -185,6 +189,17 @@ class EVAndBatteryChargerCalculator:
         """Initialize the calculator."""
         self.hass = hass
         self.entry = entry
+        self._active_charge_window = False
+        self._charge_window_signature: str | None = None
+        self._locked_ready_by: datetime | None = None
+        self._locked_planned_start: datetime | None = None
+        self._locked_planned_end: datetime | None = None
+        self._locked_duration_minutes: int | None = None
+        self._locked_exact_duration_minutes: float | None = None
+        self._locked_energy_needed_kwh: float | None = None
+        self._locked_charge_started_at: datetime | None = None
+        self._locked_charge_finished_at: datetime | None = None
+        self._completed_charge_window_signature: str | None = None
 
     @property
     def config(self) -> dict[str, Any]:
@@ -333,17 +348,84 @@ class EVAndBatteryChargerCalculator:
 
         planned_start = planned_end - timedelta(minutes=duration_minutes)
 
-        minutes_until_start = round((planned_start - now).total_seconds() / 60)
-        minutes_until_end = round((planned_end - now).total_seconds() / 60)
+        # Once the charge window has started, freeze the initially calculated
+        # duration and wait exactly that runtime. While the window is active, SOC
+        # changes must not shorten the remaining duration and must not move the
+        # planned start/end times. After the frozen duration has elapsed, this
+        # charge cycle is marked as completed and reports "not_needed" until the
+        # target signature changes, for example because the next daily ready time
+        # or the next calendar event changes.
+        charge_window_signature = (
+            f"{target_source}|{ready_by.isoformat()}|{target_soc}|"
+            f"{target_source_priority}|{calendar_entity}"
+        )
 
-        if duration_minutes == 0:
+        if self._charge_window_signature != charge_window_signature:
+            self._active_charge_window = False
+            self._charge_window_signature = charge_window_signature
+            self._completed_charge_window_signature = None
+            self._locked_ready_by = None
+            self._locked_planned_start = None
+            self._locked_planned_end = None
+            self._locked_duration_minutes = None
+            self._locked_exact_duration_minutes = None
+            self._locked_energy_needed_kwh = None
+            self._locked_charge_started_at = None
+            self._locked_charge_finished_at = None
+
+        charging_window_locked = False
+
+        if self._completed_charge_window_signature == charge_window_signature:
+            status = "not_needed"
+            duration_minutes = 0
+            exact_duration_minutes = 0.0
+            energy_needed_kwh = 0.0
+        elif self._active_charge_window:
+            locked_finished_at = self._locked_charge_finished_at or planned_end
+            locked_duration_minutes = self._locked_duration_minutes or duration_minutes
+            locked_exact_duration_minutes = self._locked_exact_duration_minutes or exact_duration_minutes
+            locked_energy_needed_kwh = self._locked_energy_needed_kwh or energy_needed_kwh
+
+            if now < locked_finished_at:
+                status = "charging_window"
+                charging_window_locked = True
+                duration_minutes = locked_duration_minutes
+                exact_duration_minutes = locked_exact_duration_minutes
+                energy_needed_kwh = locked_energy_needed_kwh
+                if self._locked_ready_by is not None:
+                    ready_by = self._locked_ready_by
+                if self._locked_planned_start is not None:
+                    planned_start = self._locked_planned_start
+                planned_end = locked_finished_at
+            else:
+                status = "not_needed"
+                self._active_charge_window = False
+                self._completed_charge_window_signature = charge_window_signature
+                duration_minutes = 0
+                exact_duration_minutes = 0.0
+                energy_needed_kwh = 0.0
+        elif duration_minutes == 0:
             status = "not_needed"
         elif now < planned_start:
             status = "waiting"
         elif now <= planned_end:
             status = "charging_window"
+            charging_window_locked = True
+            self._active_charge_window = True
+            self._locked_ready_by = ready_by
+            self._locked_planned_start = planned_start
+            self._locked_duration_minutes = duration_minutes
+            self._locked_exact_duration_minutes = exact_duration_minutes
+            self._locked_energy_needed_kwh = energy_needed_kwh
+            self._locked_charge_started_at = now
+            self._locked_charge_finished_at = now + timedelta(minutes=duration_minutes)
+            self._locked_planned_end = self._locked_charge_finished_at
+            planned_end = self._locked_charge_finished_at
         else:
             status = "late"
+
+        minutes_until_start = round((planned_start - now).total_seconds() / 60)
+        minutes_until_end = round((planned_end - now).total_seconds() / 60)
 
         return ChargeCalculation(
             current_soc=current_soc,
@@ -365,6 +447,10 @@ class EVAndBatteryChargerCalculator:
             status=status,
             minutes_until_start=minutes_until_start,
             minutes_until_end=minutes_until_end,
+            charging_window_locked=charging_window_locked,
+            locked_duration_minutes=self._locked_duration_minutes,
+            locked_charge_started_at=self._locked_charge_started_at,
+            locked_charge_finished_at=self._locked_charge_finished_at,
             **calendar_details,
         )
 
@@ -469,6 +555,10 @@ class EVAndBatteryChargerSensor(SensorEntity):
             "duration_minutes_exact": round(calculation.exact_duration_minutes, 2),
             "energy_needed_kwh": calculation.energy_needed_kwh,
             "status": calculation.status,
+            "charging_window_locked": calculation.charging_window_locked,
+            "locked_duration_minutes": calculation.locked_duration_minutes,
+            "locked_charge_started_at": calculation.locked_charge_started_at.isoformat() if calculation.locked_charge_started_at else None,
+            "locked_charge_finished_at": calculation.locked_charge_finished_at.isoformat() if calculation.locked_charge_finished_at else None,
             "minutes_until_start": calculation.minutes_until_start,
             "minutes_until_end": calculation.minutes_until_end,
             "source_soc_entity": self.calculator.config[CONF_SOC_SENSOR],

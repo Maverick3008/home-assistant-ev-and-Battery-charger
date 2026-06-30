@@ -92,6 +92,20 @@ Hinweis: Die Integration nutzt die nächsten Kalendertermin-Attribute der Kalend
 | Ladeziel Priorität | `Kalendertermin zuerst` oder `Tägliche Nacht-Uhrzeit zuerst` |
 | Ladeplan Status | `not_needed`, `waiting`, `charging_window` oder `late` |
 
+### Feste Ladedauer im laufenden Ladefenster
+
+Sobald das Ladefenster einmal erreicht wurde, wird die zu diesem Zeitpunkt berechnete **Benötigte Ladedauer** eingefroren. Während des laufenden Ladefensters wird die Dauer nicht mehr durch steigenden SOC neu berechnet oder verkürzt.
+
+Der Status bleibt für genau diese eingefrorene Ladedauer auf `charging_window`. Danach wechselt der Status für dieses Ladeziel direkt auf `not_needed`.
+
+Zusätzliche Diagnose-Attribute:
+
+```text
+locked_duration_minutes
+locked_charge_started_at
+locked_charge_finished_at
+```
+
 ## Installation
 
 1. Kopiere den Ordner `custom_components/ev_and_battery_charger` nach Home Assistant.
@@ -125,7 +139,7 @@ actions:
 Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
 
 
-Version: 1.0.8
+Version: 1.0.10
 
 
 ---
@@ -224,6 +238,20 @@ Note: The integration uses the next-event attributes of the calendar entity (`me
 | Target source priority | `Calendar event first` or `Daily overnight time first` |
 | Charge plan status | `not_needed`, `waiting`, `charging_window` or `late` |
 
+### Fixed charging duration during an active charging window
+
+Once the charging window has been reached, the **required charge duration** calculated at that moment is frozen. During the active charging window, the duration is no longer recalculated or shortened by rising SOC values.
+
+The status stays on `charging_window` for exactly this frozen duration. After that duration has elapsed, the status changes directly to `not_needed` for the current charge target.
+
+Additional diagnostic attributes:
+
+```text
+locked_duration_minutes
+locked_charge_started_at
+locked_charge_finished_at
+```
+
 ## Installation
 
 1. Copy the folder `custom_components/ev_and_battery_charger` to Home Assistant.
@@ -257,4 +285,4 @@ actions:
 You can stop charging in the same way using the planned charge end sensor.
 
 
-Version: 1.0.8
+Version: 1.0.10

@@ -92,6 +92,20 @@ Note: The integration uses the next-event attributes of the calendar entity (`me
 | Target source priority | `Calendar event first` or `Daily overnight time first` |
 | Charge plan status | `not_needed`, `waiting`, `charging_window` or `late` |
 
+### Fixed charging duration during an active charging window
+
+Once the charging window has been reached, the **required charge duration** calculated at that moment is frozen. During the active charging window, the duration is no longer recalculated or shortened by rising SOC values.
+
+The status stays on `charging_window` for exactly this frozen duration. After that duration has elapsed, the status changes directly to `not_needed` for the current charge target.
+
+Additional diagnostic attributes:
+
+```text
+locked_duration_minutes
+locked_charge_started_at
+locked_charge_finished_at
+```
+
 ## Installation
 
 1. Copy the folder `custom_components/ev_and_battery_charger` to Home Assistant.
@@ -125,4 +139,4 @@ actions:
 You can stop charging in the same way using the planned charge end sensor.
 
 
-Version: 1.0.8
+Version: 1.0.10
