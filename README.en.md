@@ -1,5 +1,10 @@
 # EV and Battery Charger
 
+### Note for version 1.0.12
+
+The initial target state of charge is now shown with a proper translated label in the config flow. Internally, the stored configuration value remains compatible with existing installations.
+
+
 **EV and Battery Charger** is a Home Assistant custom integration that calculates charging duration, planned charging start and planned charging end for an electric vehicle, plug-in hybrid or battery storage system.
 
 The integration can use a fixed daily ready-by time or optionally use the **next event from a Home Assistant calendar**. The config flow now lets you choose which source has priority: **calendar first** or **daily time first**. The planned charging end is still placed before the selected ready-by time by the configured buffer, for example 30 minutes.
@@ -146,4 +151,4 @@ actions:
 You can stop charging in the same way using the planned charge end sensor.
 
 
-Version: 1.0.11
+Version: 1.0.12

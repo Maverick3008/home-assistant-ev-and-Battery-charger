@@ -1,3 +1,9 @@
+## 1.0.12
+
+- Improved the config-flow label for the initial target state of charge.
+- Uses a dedicated UI field key so Home Assistant no longer shows the raw technical label `target_soc` on some frontend versions.
+- Keeps existing configuration compatibility by storing the value internally as `target_soc`.
+
 # Changelog
 
 ## 1.0.11

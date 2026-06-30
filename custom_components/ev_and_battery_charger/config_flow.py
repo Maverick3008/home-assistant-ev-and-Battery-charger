@@ -34,6 +34,11 @@ from .const import (
     TARGET_SOURCE_PRIORITY_OPTIONS,
 )
 
+# UI-only key for the initial target SOC field.
+# Keeping this separate from the stored key avoids Home Assistant showing the raw
+# technical key "target_soc" in some frontend versions for number selectors.
+FLOW_TARGET_SOC = "ziel_ladestand"
+
 
 def _target_priority_selector() -> selector.SelectSelector:
     """Return the target source priority selector with translated labels."""
@@ -85,8 +90,8 @@ def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     schema.update(
         {
             vol.Required(
-                CONF_TARGET_SOC,
-                default=defaults.get(CONF_TARGET_SOC, DEFAULT_TARGET_SOC),
+                FLOW_TARGET_SOC,
+                default=defaults.get(FLOW_TARGET_SOC, defaults.get(CONF_TARGET_SOC, DEFAULT_TARGET_SOC)),
             ): _target_soc_selector(),
             vol.Required(
                 CONF_TARGET_TIME,
@@ -154,6 +159,18 @@ def _validate_time(value: Any) -> bool:
         return False
 
 
+def _target_soc_field(user_input: dict[str, Any]) -> str:
+    """Return the target SOC field used by the current flow input."""
+    return FLOW_TARGET_SOC if FLOW_TARGET_SOC in user_input else CONF_TARGET_SOC
+
+
+def _target_soc_value(user_input: dict[str, Any]) -> Any:
+    """Return the target SOC value from either the UI key or the stored key."""
+    if FLOW_TARGET_SOC in user_input:
+        return user_input.get(FLOW_TARGET_SOC)
+    return user_input.get(CONF_TARGET_SOC)
+
+
 def _validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     """Validate user input and return config flow errors."""
     errors: dict[str, str] = {}
@@ -166,11 +183,15 @@ def _validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     if "." not in soc_sensor:
         errors[CONF_SOC_SENSOR] = "invalid_entity"
 
-    target_soc = _as_float(user_input, CONF_TARGET_SOC)
+    target_soc_key = _target_soc_field(user_input)
+    try:
+        target_soc = float(_target_soc_value(user_input))
+    except (TypeError, ValueError):
+        target_soc = None
     if target_soc is None:
-        errors[CONF_TARGET_SOC] = "invalid_number"
+        errors[target_soc_key] = "invalid_number"
     elif not (0 <= target_soc <= 100):
-        errors[CONF_TARGET_SOC] = "invalid_target_soc"
+        errors[target_soc_key] = "invalid_target_soc"
 
     calendar_entity = str(user_input.get(CONF_CALENDAR_ENTITY, "") or "").strip()
     if calendar_entity and not calendar_entity.startswith("calendar."):
@@ -231,7 +252,8 @@ def _normalize_input(user_input: dict[str, Any]) -> dict[str, Any]:
     normalized = dict(user_input)
     normalized[CONF_NAME] = str(normalized.get(CONF_NAME, "")).strip()
     normalized[CONF_SOC_SENSOR] = str(normalized.get(CONF_SOC_SENSOR, "")).strip()
-    normalized[CONF_TARGET_SOC] = float(normalized.get(CONF_TARGET_SOC, DEFAULT_TARGET_SOC))
+    normalized[CONF_TARGET_SOC] = float(_target_soc_value(normalized) or DEFAULT_TARGET_SOC)
+    normalized.pop(FLOW_TARGET_SOC, None)
     normalized[CONF_TARGET_TIME] = _normalize_time(normalized.get(CONF_TARGET_TIME, DEFAULT_TARGET_TIME))
     normalized[CONF_TARGET_SOURCE_PRIORITY] = str(
         normalized.get(CONF_TARGET_SOURCE_PRIORITY, DEFAULT_TARGET_SOURCE_PRIORITY)
@@ -258,7 +280,7 @@ class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for EV and Battery Charger."""
 
     VERSION = 1
-    MINOR_VERSION = 11
+    MINOR_VERSION = 12
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

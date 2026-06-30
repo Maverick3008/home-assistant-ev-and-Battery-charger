@@ -1,5 +1,10 @@
 # EV and Battery Charger
 
+### Version 1.0.12
+
+The initial target state of charge now uses a proper translated config-flow label instead of showing the raw technical key `target_soc` on affected Home Assistant frontends.
+
+
 **EV and Battery Charger** ist eine Home-Assistant-Custom-Integration zur Berechnung der Ladedauer, des geplanten Ladestarts und des geplanten Ladeendes für ein E-Auto, Plug-in-Hybrid-Fahrzeug oder einen Batteriespeicher.
 
 Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder optional den **nächsten Termin aus einem Home-Assistant-Kalender** verwenden. Im Config Flow kannst du jetzt festlegen, welche Quelle Vorrang hat: **Kalender zuerst** oder **tägliche Uhrzeit zuerst**. Das geplante Ladeende liegt weiterhin um den konfigurierten Puffer davor, zum Beispiel 30 Minuten.
@@ -146,7 +151,7 @@ actions:
 Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
 
 
-Version: 1.0.11
+Version: 1.0.12
 
 
 ---
@@ -299,4 +304,4 @@ actions:
 You can stop charging in the same way using the planned charge end sensor.
 
 
-Version: 1.0.11
+Version: 1.0.12
