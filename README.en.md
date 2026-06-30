@@ -1,6 +1,6 @@
 # EV and Battery Charger
 
-### Note for version 1.0.12
+### Note for version 1.0.13
 
 The initial target state of charge is now shown with a proper translated label in the config flow. Internally, the stored configuration value remains compatible with existing installations.
 
@@ -151,4 +151,4 @@ actions:
 You can stop charging in the same way using the planned charge end sensor.
 
 
-Version: 1.0.12
+Version: 1.0.13

@@ -16,7 +16,8 @@
           "efficiency": "Ladeeffizienz-Faktor",
           "buffer_minutes": "Puffer vor der Fertig-Uhrzeit",
           "calendar_entity": "Kalender für nächsten Termin (optional)",
-          "ziel_ladestand": "Ziel-Ladestand"
+          "ziel_ladestand": "Ziel-Ladestand",
+          "Ziel-Ladestand": "Ziel-Ladestand"
         },
         "data_description": {
           "name": "Beispiel: Cupra Leon oder Hausakku",
@@ -29,7 +30,8 @@
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
           "calendar_entity": "Optional: Wähle eine calendar.* Entität. Wenn ein nächster Termin vorhanden ist, kann dessen Startzeit als Fertig-Zeit verwendet werden.",
-          "ziel_ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern."
+          "ziel_ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
+          "Ziel-Ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern."
         }
       },
       "reconfigure": {
@@ -46,7 +48,8 @@
           "efficiency": "Ladeeffizienz-Faktor",
           "buffer_minutes": "Puffer vor der Fertig-Uhrzeit",
           "calendar_entity": "Kalender für nächsten Termin (optional)",
-          "ziel_ladestand": "Ziel-Ladestand"
+          "ziel_ladestand": "Ziel-Ladestand",
+          "Ziel-Ladestand": "Ziel-Ladestand"
         },
         "data_description": {
           "name": "Beispiel: Cupra Leon oder Hausakku",
@@ -59,7 +62,8 @@
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
           "calendar_entity": "Optional: Wähle eine calendar.* Entität. Wenn ein nächster Termin vorhanden ist, kann dessen Startzeit als Fertig-Zeit verwendet werden.",
-          "ziel_ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern."
+          "ziel_ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
+          "Ziel-Ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern."
         }
       }
     },
@@ -97,7 +101,8 @@
           "efficiency": "Ladeeffizienz-Faktor",
           "buffer_minutes": "Puffer vor der Fertig-Uhrzeit",
           "calendar_entity": "Kalender für nächsten Termin (optional)",
-          "ziel_ladestand": "Ziel-Ladestand"
+          "ziel_ladestand": "Ziel-Ladestand",
+          "Ziel-Ladestand": "Ziel-Ladestand"
         },
         "data_description": {
           "name": "Beispiel: Cupra Leon oder Hausakku",
@@ -110,7 +115,8 @@
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
           "calendar_entity": "Optional: Wähle eine calendar.* Entität. Wenn ein nächster Termin vorhanden ist, kann dessen Startzeit als Fertig-Zeit verwendet werden.",
-          "ziel_ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern."
+          "ziel_ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
+          "Ziel-Ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern."
         }
       }
     },

@@ -1,4 +1,4 @@
-## 1.0.12
+## 1.0.13
 
 - Improved the config-flow label for the initial target state of charge.
 - Uses a dedicated UI field key so Home Assistant no longer shows the raw technical label `target_soc` on some frontend versions.
@@ -6,7 +6,7 @@
 
 # Changelog
 
-## 1.0.11
+## 1.0.13
 
 - Added entity selectors to the config/options flow for the current SOC entity and optional calendar entity.
 - Added an internal **Target state of charge** number entity so the target SOC can be changed directly in Home Assistant.

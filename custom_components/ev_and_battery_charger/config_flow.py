@@ -37,7 +37,7 @@ from .const import (
 # UI-only key for the initial target SOC field.
 # Keeping this separate from the stored key avoids Home Assistant showing the raw
 # technical key "target_soc" in some frontend versions for number selectors.
-FLOW_TARGET_SOC = "ziel_ladestand"
+FLOW_TARGET_SOC = "Ziel-Ladestand"
 
 
 def _target_priority_selector() -> selector.SelectSelector:
@@ -280,7 +280,7 @@ class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for EV and Battery Charger."""
 
     VERSION = 1
-    MINOR_VERSION = 12
+    MINOR_VERSION = 13
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

@@ -1,6 +1,6 @@
 # EV and Battery Charger
 
-### Version 1.0.12
+### Version 1.0.13
 
 The initial target state of charge now uses a proper translated config-flow label instead of showing the raw technical key `target_soc` on affected Home Assistant frontends.
 
@@ -151,7 +151,7 @@ actions:
 Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
 
 
-Version: 1.0.12
+Version: 1.0.13
 
 
 ---
@@ -304,4 +304,4 @@ actions:
 You can stop charging in the same way using the planned charge end sensor.
 
 
-Version: 1.0.12
+Version: 1.0.13

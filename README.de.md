@@ -1,6 +1,6 @@
 # EV and Battery Charger
 
-### Hinweis zu Version 1.0.12
+### Hinweis zu Version 1.0.13
 
 Der Startwert für den Ziel-Ladestand wird im Config Flow jetzt sauber als **Ziel-Ladestand** angezeigt. Intern bleibt der gespeicherte Konfigurationswert weiterhin kompatibel mit bestehenden Installationen.
 
@@ -151,4 +151,4 @@ actions:
 Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
 
 
-Version: 1.0.12
+Version: 1.0.13
