@@ -33,6 +33,7 @@ from .const import (
     CONF_CALENDAR_ENTITY,
     CONF_CHARGE_POWER_KW,
     CONF_EFFICIENCY,
+    CONF_FULL_CHARGE_EXTRA_MINUTES,
     CONF_NAME,
     CONF_SOC_SENSOR,
     CONF_TARGET_SOC,
@@ -42,6 +43,7 @@ from .const import (
     DEFAULT_BATTERY_SIZE_KWH,
     DEFAULT_BUFFER_MINUTES,
     DEFAULT_CHARGE_POWER_KW,
+    DEFAULT_FULL_CHARGE_EXTRA_MINUTES,
     DEFAULT_EFFICIENCY,
     DEFAULT_NAME,
     DEFAULT_TARGET_SOC,
@@ -81,6 +83,7 @@ class ChargeCalculation:
     planned_start: datetime
     duration_minutes: int
     exact_duration_minutes: float
+    full_charge_extra_minutes: int
     energy_needed_kwh: float
     status: str
     minutes_until_start: int
@@ -375,6 +378,27 @@ class EVAndBatteryChargerCalculator:
             exact_duration_minutes = (energy_needed_kwh / charge_power_kw) * 60
             duration_minutes = ceil(exact_duration_minutes)
 
+        try:
+            configured_full_charge_extra_minutes = int(
+                float(
+                    config.get(
+                        CONF_FULL_CHARGE_EXTRA_MINUTES,
+                        DEFAULT_FULL_CHARGE_EXTRA_MINUTES,
+                    )
+                )
+            )
+        except (TypeError, ValueError):
+            configured_full_charge_extra_minutes = DEFAULT_FULL_CHARGE_EXTRA_MINUTES
+        configured_full_charge_extra_minutes = max(configured_full_charge_extra_minutes, 0)
+        full_charge_extra_minutes = (
+            configured_full_charge_extra_minutes
+            if target_soc >= 100 and duration_minutes > 0
+            else 0
+        )
+        if full_charge_extra_minutes:
+            exact_duration_minutes += full_charge_extra_minutes
+            duration_minutes += full_charge_extra_minutes
+
         planned_start = planned_end - timedelta(minutes=duration_minutes)
 
         # Once the charge window has started, freeze the initially calculated
@@ -472,6 +496,7 @@ class EVAndBatteryChargerCalculator:
             planned_start=planned_start,
             duration_minutes=duration_minutes,
             exact_duration_minutes=exact_duration_minutes,
+            full_charge_extra_minutes=full_charge_extra_minutes,
             energy_needed_kwh=round(energy_needed_kwh, 4),
             status=status,
             minutes_until_start=minutes_until_start,
@@ -597,6 +622,7 @@ class EVAndBatteryChargerSensor(SensorEntity):
             "planned_start": calculation.planned_start.isoformat(),
             "planned_end": calculation.planned_end.isoformat(),
             "duration_minutes_exact": round(calculation.exact_duration_minutes, 2),
+            "full_charge_extra_minutes": calculation.full_charge_extra_minutes,
             "energy_needed_kwh": calculation.energy_needed_kwh,
             "status": calculation.status,
             "charging_window_locked": calculation.charging_window_locked,

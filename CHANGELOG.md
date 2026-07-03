@@ -1,3 +1,16 @@
+## 1.0.15
+
+- Added the full-charge safety extension to the config flow.
+- Added German label: "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand".
+- The 100% target charge extension is now configurable instead of fixed at 10 minutes.
+
+# Changelog
+
+## 1.0.14
+
+- Added a 10-minute full-charge safety extension when the target state of charge is 100%.
+- The extra time is included in the required charging duration and therefore moves the planned charging start 10 minutes earlier.
+
 ## 1.0.13
 
 - Improved the config-flow label for the initial target state of charge.

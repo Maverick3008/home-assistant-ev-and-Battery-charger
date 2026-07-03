@@ -15,6 +15,7 @@
           "charge_power_kw": "Charging power",
           "efficiency": "Charging efficiency factor",
           "buffer_minutes": "Buffer before ready time",
+          "full_charge_extra_minutes": "Extra charging time at 100% target state of charge",
           "calendar_entity": "Calendar for next event (optional)",
           "ziel_ladestand": "Initial target state of charge",
           "Ziel-Ladestand": "Initial target state of charge"
@@ -29,6 +30,7 @@
           "charge_power_kw": "Expected charging power in kW.",
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
           "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
+          "full_charge_extra_minutes": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes.",
           "calendar_entity": "Optional: select a calendar.* entity. If a next event is available, its start time can be used as the ready time.",
           "ziel_ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity."
@@ -47,6 +49,7 @@
           "charge_power_kw": "Charging power",
           "efficiency": "Charging efficiency factor",
           "buffer_minutes": "Buffer before ready time",
+          "full_charge_extra_minutes": "Extra charging time at 100% target state of charge",
           "calendar_entity": "Calendar for next event (optional)",
           "ziel_ladestand": "Initial target state of charge",
           "Ziel-Ladestand": "Initial target state of charge"
@@ -61,6 +64,7 @@
           "charge_power_kw": "Expected charging power in kW.",
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
           "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
+          "full_charge_extra_minutes": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes.",
           "calendar_entity": "Optional: select a calendar.* entity. If a next event is available, its start time can be used as the ready time.",
           "ziel_ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity."
@@ -100,6 +104,7 @@
           "charge_power_kw": "Charging power",
           "efficiency": "Charging efficiency factor",
           "buffer_minutes": "Buffer before ready time",
+          "full_charge_extra_minutes": "Extra charging time at 100% target state of charge",
           "calendar_entity": "Calendar for next event (optional)",
           "ziel_ladestand": "Initial target state of charge",
           "Ziel-Ladestand": "Initial target state of charge"
@@ -114,6 +119,7 @@
           "charge_power_kw": "Expected charging power in kW.",
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
           "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
+          "full_charge_extra_minutes": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes.",
           "calendar_entity": "Optional: select a calendar.* entity. If a next event is available, its start time can be used as the ready time.",
           "ziel_ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity."

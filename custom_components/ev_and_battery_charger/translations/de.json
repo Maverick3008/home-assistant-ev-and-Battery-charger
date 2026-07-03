@@ -15,6 +15,7 @@
           "charge_power_kw": "Ladeleistung",
           "efficiency": "Ladeeffizienz-Faktor",
           "buffer_minutes": "Puffer vor der Fertig-Uhrzeit",
+          "full_charge_extra_minutes": "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand",
           "calendar_entity": "Kalender für nächsten Termin (optional)",
           "ziel_ladestand": "Ziel-Ladestand",
           "Ziel-Ladestand": "Ziel-Ladestand"
@@ -29,6 +30,7 @@
           "charge_power_kw": "Erwartete Ladeleistung in kW.",
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
+          "full_charge_extra_minutes": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur addiert wird, wenn der Ziel-Ladestand 100 % beträgt und noch geladen werden muss. Standard: 10 Minuten.",
           "calendar_entity": "Optional: Wähle eine calendar.* Entität. Wenn ein nächster Termin vorhanden ist, kann dessen Startzeit als Fertig-Zeit verwendet werden.",
           "ziel_ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
           "Ziel-Ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern."
@@ -47,6 +49,7 @@
           "charge_power_kw": "Ladeleistung",
           "efficiency": "Ladeeffizienz-Faktor",
           "buffer_minutes": "Puffer vor der Fertig-Uhrzeit",
+          "full_charge_extra_minutes": "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand",
           "calendar_entity": "Kalender für nächsten Termin (optional)",
           "ziel_ladestand": "Ziel-Ladestand",
           "Ziel-Ladestand": "Ziel-Ladestand"
@@ -61,6 +64,7 @@
           "charge_power_kw": "Erwartete Ladeleistung in kW.",
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
+          "full_charge_extra_minutes": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur addiert wird, wenn der Ziel-Ladestand 100 % beträgt und noch geladen werden muss. Standard: 10 Minuten.",
           "calendar_entity": "Optional: Wähle eine calendar.* Entität. Wenn ein nächster Termin vorhanden ist, kann dessen Startzeit als Fertig-Zeit verwendet werden.",
           "ziel_ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
           "Ziel-Ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern."
@@ -100,6 +104,7 @@
           "charge_power_kw": "Ladeleistung",
           "efficiency": "Ladeeffizienz-Faktor",
           "buffer_minutes": "Puffer vor der Fertig-Uhrzeit",
+          "full_charge_extra_minutes": "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand",
           "calendar_entity": "Kalender für nächsten Termin (optional)",
           "ziel_ladestand": "Ziel-Ladestand",
           "Ziel-Ladestand": "Ziel-Ladestand"
@@ -114,6 +119,7 @@
           "charge_power_kw": "Erwartete Ladeleistung in kW.",
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
+          "full_charge_extra_minutes": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur addiert wird, wenn der Ziel-Ladestand 100 % beträgt und noch geladen werden muss. Standard: 10 Minuten.",
           "calendar_entity": "Optional: Wähle eine calendar.* Entität. Wenn ein nächster Termin vorhanden ist, kann dessen Startzeit als Fertig-Zeit verwendet werden.",
           "ziel_ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
           "Ziel-Ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern."

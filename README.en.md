@@ -1,8 +1,8 @@
 # EV and Battery Charger
 
-### Note for version 1.0.13
+### Note for version 1.0.15
 
-The initial target state of charge is now shown with a proper translated label in the config flow. Internally, the stored configuration value remains compatible with existing installations.
+When the target state of charge is **100%** and charging is actually required, a configurable safety extension is added to the charging duration. Default: **10 minutes**.
 
 
 **EV and Battery Charger** is a Home Assistant custom integration that calculates charging duration, planned charging start and planned charging end for an electric vehicle, plug-in hybrid or battery storage system.
@@ -19,6 +19,7 @@ The integration can use a fixed daily ready-by time or optionally use the **next
 - Priority selection: calendar first or daily time first
 - Falls back to the daily ready-by time when calendar first is selected and no calendar event is available
 - Dedicated target state of charge number entity (`number.*`)
+- Adds a configurable safety extension when the target state of charge is 100%
 - Current state of charge through a sensor entity
 - German and English translations
 - Icon, logo and brand files included
@@ -31,6 +32,7 @@ The integration can use a fixed daily ready-by time or optionally use the **next
 | Charging power | `10.5` kW |
 | Charging efficiency | `0.93` |
 | Buffer | `30` minutes |
+| Extra charging time at 100% target state of charge | `10` minutes |
 
 ## Calculation
 
@@ -38,6 +40,8 @@ The integration can use a fixed daily ready-by time or optionally use the **next
 soc_diff = target_soc - current_soc
 kwh_needed = (soc_diff / 100) * battery_size_kwh / efficiency
 duration_minutes = ceil((kwh_needed / charge_power_kw) * 60)
+if target_soc >= 100 and duration_minutes > 0:
+    duration_minutes = duration_minutes + full_charge_extra_minutes
 planned_end = ready_by - buffer_minutes
 planned_start = planned_end - duration_minutes
 ```
@@ -102,6 +106,11 @@ A number entity is also created:
 | Entity | Meaning |
 |---|---|
 | Target state of charge | Target SOC in percent that you can change directly in Home Assistant later |
+
+
+### 100% full-charge safety extension
+
+If the target state of charge is set to **100%** and charging is actually required, the integration adds the safety extension configured in the config flow to the calculated charging duration. The setting is called **Extra charging time at 100% target state of charge**. Default: **10 minutes**. This moves the planned start earlier or keeps the charging window active longer to help ensure the vehicle is really full.
 
 ### Fixed charging duration during an active charging window
 

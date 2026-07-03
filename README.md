@@ -1,8 +1,8 @@
 # EV and Battery Charger
 
-### Version 1.0.13
+### Version 1.0.15
 
-The initial target state of charge now uses a proper translated config-flow label instead of showing the raw technical key `target_soc` on affected Home Assistant frontends.
+Wenn der Ziel-Ladestand auf **100 %** steht und tatsächlich noch geladen werden muss, wird ein konfigurierbarer Sicherheitsaufschlag zur Ladedauer addiert. Standard: **10 Minuten**.
 
 
 **EV and Battery Charger** ist eine Home-Assistant-Custom-Integration zur Berechnung der Ladedauer, des geplanten Ladestarts und des geplanten Ladeendes für ein E-Auto, Plug-in-Hybrid-Fahrzeug oder einen Batteriespeicher.
@@ -19,6 +19,7 @@ Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder op
 - Auswahl der Priorität: Kalender zuerst oder tägliche Uhrzeit zuerst
 - Fallback auf tägliche Fertig-Uhrzeit, wenn Kalender zuerst gewählt ist und kein Kalendertermin verfügbar ist
 - Eigene Zahl-Entität für den Ziel-Ladestand (`number.*`)
+- Bei Ziel-Ladestand 100 % wird ein konfigurierbarer Sicherheitsaufschlag zur Ladedauer addiert
 - Aktueller Akkustand direkt im Config Flow auswählbar
 - Deutsche und englische Übersetzungen
 - Icon, Logo und Brand-Dateien enthalten
@@ -31,6 +32,7 @@ Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder op
 | Ladeleistung | `10.5` kW |
 | Ladeeffizienz | `0.93` |
 | Puffer | `30` Minuten |
+| Zusätzliche Ladezeit bei 100 % Ziel-Ladestand | `10` Minuten |
 
 ## Berechnung
 
@@ -38,6 +40,8 @@ Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder op
 soc_diff = target_soc - current_soc
 kwh_needed = (soc_diff / 100) * battery_size_kwh / efficiency
 duration_minutes = ceil((kwh_needed / charge_power_kw) * 60)
+if target_soc >= 100 and duration_minutes > 0:
+    duration_minutes = duration_minutes + full_charge_extra_minutes
 planned_end = ready_by - buffer_minutes
 planned_start = planned_end - duration_minutes
 ```
@@ -103,6 +107,11 @@ Zusätzlich wird eine Zahl-Entität erstellt:
 |---|---|
 | Ziel-Ladestand | Ziel-SOC in Prozent, den du später direkt in Home Assistant ändern kannst |
 
+
+### Sicherheitsaufschlag bei 100 %
+
+Wenn der Ziel-Ladestand auf **100 %** steht und tatsächlich noch geladen werden muss, addiert die Integration den im Config Flow eingestellten Sicherheitsaufschlag zur berechneten Ladedauer. Die Einstellung heißt **Zusätzliche Ladezeit bei 100 % Ziel-Ladestand**. Standardwert: **10 Minuten**. Dadurch startet die Ladung entsprechend früher beziehungsweise bleibt entsprechend länger im Ladefenster, damit das Auto wirklich voll wird.
+
 ### Feste Ladedauer im laufenden Ladefenster
 
 Sobald das Ladefenster einmal erreicht wurde, wird die zu diesem Zeitpunkt berechnete **Benötigte Ladedauer** eingefroren. Während des laufenden Ladefensters wird die Dauer nicht mehr durch steigenden SOC neu berechnet oder verkürzt.
@@ -123,7 +132,7 @@ locked_charge_finished_at
 2. Starte Home Assistant neu.
 3. Gehe zu **Einstellungen → Geräte & Dienste → Integration hinzufügen**.
 4. Suche nach **EV and Battery Charger**.
-5. Wähle den aktuellen Ladestand, optional den Kalender und trage deine Ladeparameter ein.
+5. Wähle den aktuellen Ladestand, optional den Kalender und trage deine Ladeparameter inklusive **Zusätzliche Ladezeit bei 100 % Ziel-Ladestand** ein.
 6. Danach kannst du den Ziel-Ladestand über die neue Entität **Ziel-Ladestand** ändern.
 
 ## Beispiel-Automation zum Laden
@@ -151,7 +160,7 @@ actions:
 Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
 
 
-Version: 1.0.13
+Version: 1.0.15
 
 
 ---
@@ -172,6 +181,7 @@ The integration can use a fixed daily ready-by time or optionally use the **next
 - Priority selection: calendar first or daily time first
 - Falls back to the daily ready-by time when calendar first is selected and no calendar event is available
 - Dedicated target state of charge number entity (`number.*`)
+- Adds a configurable safety extension when the target state of charge is 100%
 - Current state of charge through a sensor entity
 - German and English translations
 - Icon, logo and brand files included
@@ -184,6 +194,7 @@ The integration can use a fixed daily ready-by time or optionally use the **next
 | Charging power | `10.5` kW |
 | Charging efficiency | `0.93` |
 | Buffer | `30` minutes |
+| Extra charging time at 100% target state of charge | `10` minutes |
 
 ## Calculation
 
@@ -191,6 +202,8 @@ The integration can use a fixed daily ready-by time or optionally use the **next
 soc_diff = target_soc - current_soc
 kwh_needed = (soc_diff / 100) * battery_size_kwh / efficiency
 duration_minutes = ceil((kwh_needed / charge_power_kw) * 60)
+if target_soc >= 100 and duration_minutes > 0:
+    duration_minutes = duration_minutes + full_charge_extra_minutes
 planned_end = ready_by - buffer_minutes
 planned_start = planned_end - duration_minutes
 ```
@@ -256,6 +269,11 @@ A number entity is also created:
 |---|---|
 | Target state of charge | Target SOC in percent that you can change directly in Home Assistant later |
 
+
+### 100% full-charge safety extension
+
+If the target state of charge is set to **100%** and charging is actually required, the integration adds the safety extension configured in the config flow to the calculated charging duration. The setting is called **Extra charging time at 100% target state of charge**. Default: **10 minutes**. This moves the planned start earlier or keeps the charging window active longer to help ensure the vehicle is really full.
+
 ### Fixed charging duration during an active charging window
 
 Once the charging window has been reached, the **required charge duration** calculated at that moment is frozen. During the active charging window, the duration is no longer recalculated or shortened by rising SOC values.
@@ -304,4 +322,4 @@ actions:
 You can stop charging in the same way using the planned charge end sensor.
 
 
-Version: 1.0.13
+Version: 1.0.15
