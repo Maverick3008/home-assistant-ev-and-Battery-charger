@@ -18,7 +18,8 @@
           "full_charge_extra_minutes": "Extra charging time at 100% target state of charge",
           "calendar_entity": "Calendar for next event (optional)",
           "ziel_ladestand": "Initial target state of charge",
-          "Ziel-Ladestand": "Initial target state of charge"
+          "Ziel-Ladestand": "Initial target state of charge",
+          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Extra charging time at 100% target state of charge"
         },
         "data_description": {
           "name": "Example: Cupra Leon or home battery",
@@ -33,7 +34,8 @@
           "full_charge_extra_minutes": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes.",
           "calendar_entity": "Optional: select a calendar.* entity. If a next event is available, its start time can be used as the ready time.",
           "ziel_ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
-          "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity."
+          "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
+          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes."
         }
       },
       "reconfigure": {
@@ -52,7 +54,8 @@
           "full_charge_extra_minutes": "Extra charging time at 100% target state of charge",
           "calendar_entity": "Calendar for next event (optional)",
           "ziel_ladestand": "Initial target state of charge",
-          "Ziel-Ladestand": "Initial target state of charge"
+          "Ziel-Ladestand": "Initial target state of charge",
+          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Extra charging time at 100% target state of charge"
         },
         "data_description": {
           "name": "Example: Cupra Leon or home battery",
@@ -67,7 +70,8 @@
           "full_charge_extra_minutes": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes.",
           "calendar_entity": "Optional: select a calendar.* entity. If a next event is available, its start time can be used as the ready time.",
           "ziel_ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
-          "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity."
+          "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
+          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes."
         }
       }
     },
@@ -107,7 +111,8 @@
           "full_charge_extra_minutes": "Extra charging time at 100% target state of charge",
           "calendar_entity": "Calendar for next event (optional)",
           "ziel_ladestand": "Initial target state of charge",
-          "Ziel-Ladestand": "Initial target state of charge"
+          "Ziel-Ladestand": "Initial target state of charge",
+          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Extra charging time at 100% target state of charge"
         },
         "data_description": {
           "name": "Example: Cupra Leon or home battery",
@@ -122,7 +127,8 @@
           "full_charge_extra_minutes": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes.",
           "calendar_entity": "Optional: select a calendar.* entity. If a next event is available, its start time can be used as the ready time.",
           "ziel_ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
-          "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity."
+          "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
+          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes."
         }
       }
     },

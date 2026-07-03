@@ -1,6 +1,6 @@
 # EV and Battery Charger
 
-### Note for version 1.0.15
+### Note for version 1.0.16
 
 When the target state of charge is **100%** and charging is actually required, a configurable safety extension is added to the charging duration. Default: **10 minutes**.
 

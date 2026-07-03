@@ -1,6 +1,6 @@
 # EV and Battery Charger
 
-### Hinweis zu Version 1.0.15
+### Hinweis zu Version 1.0.16
 
 Wenn der Ziel-Ladestand auf **100 %** steht und tatsächlich noch geladen werden muss, wird ein konfigurierbarer Sicherheitsaufschlag zur Ladedauer addiert. Standard: **10 Minuten**.
 

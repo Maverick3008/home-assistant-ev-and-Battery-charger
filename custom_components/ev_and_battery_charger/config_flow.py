@@ -40,6 +40,7 @@ from .const import (
 # Keeping this separate from the stored key avoids Home Assistant showing the raw
 # technical key "target_soc" in some frontend versions for number selectors.
 FLOW_TARGET_SOC = "Ziel-Ladestand"
+FLOW_FULL_CHARGE_EXTRA_MINUTES = "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand"
 
 
 def _target_priority_selector() -> selector.SelectSelector:
@@ -120,10 +121,13 @@ def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
                 default=defaults.get(CONF_BUFFER_MINUTES, DEFAULT_BUFFER_MINUTES),
             ): vol.Coerce(int),
             vol.Required(
-                CONF_FULL_CHARGE_EXTRA_MINUTES,
+                FLOW_FULL_CHARGE_EXTRA_MINUTES,
                 default=defaults.get(
-                    CONF_FULL_CHARGE_EXTRA_MINUTES,
-                    DEFAULT_FULL_CHARGE_EXTRA_MINUTES,
+                    FLOW_FULL_CHARGE_EXTRA_MINUTES,
+                    defaults.get(
+                        CONF_FULL_CHARGE_EXTRA_MINUTES,
+                        DEFAULT_FULL_CHARGE_EXTRA_MINUTES,
+                    ),
                 ),
             ): vol.Coerce(int),
         }
@@ -171,6 +175,22 @@ def _validate_time(value: Any) -> bool:
 def _target_soc_field(user_input: dict[str, Any]) -> str:
     """Return the target SOC field used by the current flow input."""
     return FLOW_TARGET_SOC if FLOW_TARGET_SOC in user_input else CONF_TARGET_SOC
+
+
+def _full_charge_extra_minutes_field(user_input: dict[str, Any]) -> str:
+    """Return the full-charge extra-minutes field used by the current flow input."""
+    return (
+        FLOW_FULL_CHARGE_EXTRA_MINUTES
+        if FLOW_FULL_CHARGE_EXTRA_MINUTES in user_input
+        else CONF_FULL_CHARGE_EXTRA_MINUTES
+    )
+
+
+def _full_charge_extra_minutes_value(user_input: dict[str, Any]) -> Any:
+    """Return full-charge extra minutes from either the UI key or stored key."""
+    if FLOW_FULL_CHARGE_EXTRA_MINUTES in user_input:
+        return user_input.get(FLOW_FULL_CHARGE_EXTRA_MINUTES)
+    return user_input.get(CONF_FULL_CHARGE_EXTRA_MINUTES)
 
 
 def _target_soc_value(user_input: dict[str, Any]) -> Any:
@@ -239,11 +259,15 @@ def _validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     elif buffer_minutes < 0:
         errors[CONF_BUFFER_MINUTES] = "must_not_be_negative"
 
-    full_charge_extra_minutes = _as_int(user_input, CONF_FULL_CHARGE_EXTRA_MINUTES)
+    full_charge_extra_minutes_key = _full_charge_extra_minutes_field(user_input)
+    try:
+        full_charge_extra_minutes = int(float(_full_charge_extra_minutes_value(user_input)))
+    except (TypeError, ValueError):
+        full_charge_extra_minutes = None
     if full_charge_extra_minutes is None:
-        errors[CONF_FULL_CHARGE_EXTRA_MINUTES] = "invalid_number"
+        errors[full_charge_extra_minutes_key] = "invalid_number"
     elif full_charge_extra_minutes < 0:
-        errors[CONF_FULL_CHARGE_EXTRA_MINUTES] = "must_not_be_negative"
+        errors[full_charge_extra_minutes_key] = "must_not_be_negative"
 
     return errors
 
@@ -279,8 +303,9 @@ def _normalize_input(user_input: dict[str, Any]) -> dict[str, Any]:
     normalized[CONF_EFFICIENCY] = float(normalized[CONF_EFFICIENCY])
     normalized[CONF_BUFFER_MINUTES] = int(float(normalized[CONF_BUFFER_MINUTES]))
     normalized[CONF_FULL_CHARGE_EXTRA_MINUTES] = int(
-        float(normalized[CONF_FULL_CHARGE_EXTRA_MINUTES])
+        float(_full_charge_extra_minutes_value(normalized) or DEFAULT_FULL_CHARGE_EXTRA_MINUTES)
     )
+    normalized.pop(FLOW_FULL_CHARGE_EXTRA_MINUTES, None)
     return normalized
 
 
@@ -299,7 +324,7 @@ class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for EV and Battery Charger."""
 
     VERSION = 1
-    MINOR_VERSION = 15
+    MINOR_VERSION = 16
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

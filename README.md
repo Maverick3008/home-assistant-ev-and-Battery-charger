@@ -1,6 +1,6 @@
 # EV and Battery Charger
 
-### Version 1.0.15
+### Version 1.0.16
 
 Wenn der Ziel-Ladestand auf **100 %** steht und tatsächlich noch geladen werden muss, wird ein konfigurierbarer Sicherheitsaufschlag zur Ladedauer addiert. Standard: **10 Minuten**.
 
@@ -160,7 +160,7 @@ actions:
 Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
 
 
-Version: 1.0.15
+Version: 1.0.16
 
 
 ---
@@ -322,4 +322,4 @@ actions:
 You can stop charging in the same way using the planned charge end sensor.
 
 
-Version: 1.0.15
+Version: 1.0.16

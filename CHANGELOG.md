@@ -1,5 +1,11 @@
 ## 1.0.15
 
+
+## 1.0.16
+
+- Fixed the Config Flow label for the 100% full-charge safety extension.
+- The field now uses a UI-safe key so Home Assistant no longer shows `full_charge_extra_minutes` when translations are cached or not resolved.
+
 - Added the full-charge safety extension to the config flow.
 - Added German label: "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand".
 - The 100% target charge extension is now configurable instead of fixed at 10 minutes.
