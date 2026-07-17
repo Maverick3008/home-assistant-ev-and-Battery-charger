@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "EV and Battery Charger",
-        "description": "Calculates charging duration, planned charging start, and planned charging end for an EV, plug-in hybrid, or battery storage system. The current charge entity and optional calendar can now be selected directly. The target state of charge is provided as a dedicated number entity by the integration.",
+        "description": "Calculates charging duration, planned charging start, and planned charging end for an EV, plug-in hybrid, or battery storage system. The current charge entity and optional calendar can be selected directly. The target state of charge is provided as a dedicated number entity by the integration.",
         "data": {
           "name": "Name",
           "soc_sensor": "Current state of charge",
@@ -32,7 +32,7 @@
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
           "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
           "full_charge_extra_minutes": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes.",
-          "calendar_entity": "Optional: select a calendar.* entity. If a next event is available, its start time can be used as the ready time.",
+          "calendar_entity": "Optional: select a calendar.* entity. Only events with a start time in the future are used as the ready time.",
           "ziel_ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes."
@@ -68,7 +68,7 @@
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
           "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
           "full_charge_extra_minutes": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes.",
-          "calendar_entity": "Optional: select a calendar.* entity. If a next event is available, its start time can be used as the ready time.",
+          "calendar_entity": "Optional: select a calendar.* entity. Only events with a start time in the future are used as the ready time.",
           "ziel_ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes."
@@ -125,7 +125,7 @@
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
           "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
           "full_charge_extra_minutes": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes.",
-          "calendar_entity": "Optional: select a calendar.* entity. If a next event is available, its start time can be used as the ready time.",
+          "calendar_entity": "Optional: select a calendar.* entity. Only events with a start time in the future are used as the ready time.",
           "ziel_ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes."

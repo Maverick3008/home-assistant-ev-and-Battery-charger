@@ -1,8 +1,8 @@
 # EV and Battery Charger
 
-### Note for version 1.0.16
+### Note for version 1.0.17
 
-When the target state of charge is **100%** and charging is actually required, a configurable safety extension is added to the charging duration. Default: **10 minutes**.
+Calendar events are now used only when their start time is in the future. An event that has already started or is in the past is ignored. With **Calendar event first**, the configured daily ready time is then used automatically as the fallback.
 
 
 **EV and Battery Charger** is a Home Assistant custom integration that calculates charging duration, planned charging start and planned charging end for an electric vehicle, plug-in hybrid or battery storage system.
@@ -66,7 +66,7 @@ or:
 Daily overnight time first
 ```
 
-With `Calendar event first`, the integration uses the next calendar event as the target ready-by time if one is available. With `Daily overnight time first`, it uses the daily ready-by time as the primary source.
+With `Calendar event first`, the integration uses the next calendar event as the target ready-by time only if its start time is still in the future. With `Daily overnight time first`, it uses the daily ready-by time as the primary source.
 
 Example with `Calendar event first`:
 
@@ -82,7 +82,7 @@ Planned charge end: Tomorrow 07:30
 Planned charge start: Tomorrow 06:00
 ```
 
-If `Calendar event first` is selected and no calendar is configured or no calendar event with `start_time` is available, the integration uses the daily ready-by time. If `Daily overnight time first` is selected, the daily ready-by time is used directly.
+If `Calendar event first` is selected and no calendar is configured, no `start_time` is available, or the event has already started, the integration uses the daily ready-by time. If `Daily overnight time first` is selected, the daily ready-by time is used directly.
 
 Note: The integration uses the next-event attributes of the calendar entity (`message`, `start_time`, `end_time`). For complex calendars with multiple overlapping events, Home Assistant calendar automations may be more flexible.
 
@@ -160,4 +160,4 @@ actions:
 You can stop charging in the same way using the planned charge end sensor.
 
 
-Version: 1.0.13
+Version: 1.0.17

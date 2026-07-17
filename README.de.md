@@ -1,8 +1,8 @@
 # EV and Battery Charger
 
-### Hinweis zu Version 1.0.16
+### Hinweis zu Version 1.0.17
 
-Wenn der Ziel-Ladestand auf **100 %** steht und tatsächlich noch geladen werden muss, wird ein konfigurierbarer Sicherheitsaufschlag zur Ladedauer addiert. Standard: **10 Minuten**.
+Kalendertermine werden nur noch verwendet, wenn ihre Startzeit in der Zukunft liegt. Ein bereits gestarteter oder vergangener Termin wird verworfen. Bei der Priorität **Kalendertermin zuerst** verwendet die Integration anschließend automatisch die tägliche Fertig-Uhrzeit als Fallback.
 
 
 **EV and Battery Charger** ist eine Home-Assistant-Custom-Integration zur Berechnung der Ladedauer, des geplanten Ladestarts und des geplanten Ladeendes für ein E-Auto, Plug-in-Hybrid-Fahrzeug oder einen Batteriespeicher.
@@ -66,7 +66,7 @@ oder:
 Tägliche Nacht-Uhrzeit zuerst
 ```
 
-Bei `Kalendertermin zuerst` verwendet die Integration den nächsten Kalendertermin als Ziel-Zeitpunkt, sofern einer verfügbar ist. Bei `Tägliche Nacht-Uhrzeit zuerst` verwendet sie die tägliche Fertig-Uhrzeit als Hauptquelle.
+Bei `Kalendertermin zuerst` verwendet die Integration den nächsten Kalendertermin als Ziel-Zeitpunkt, sofern dessen Startzeit noch in der Zukunft liegt. Bei `Tägliche Nacht-Uhrzeit zuerst` verwendet sie die tägliche Fertig-Uhrzeit als Hauptquelle.
 
 Beispiel mit `Kalendertermin zuerst`:
 
@@ -82,7 +82,7 @@ Geplantes Ladeende: Morgen 07:30 Uhr
 Geplanter Ladestart: Morgen 06:00 Uhr
 ```
 
-Wenn `Kalendertermin zuerst` gewählt ist und kein Kalender eingetragen ist oder kein Kalendertermin mit `start_time` verfügbar ist, nutzt die Integration die tägliche Fertig-Uhrzeit. Wenn `Tägliche Nacht-Uhrzeit zuerst` gewählt ist, wird die tägliche Fertig-Uhrzeit direkt verwendet.
+Wenn `Kalendertermin zuerst` gewählt ist und kein Kalender eingetragen ist, kein `start_time` verfügbar ist oder der Termin bereits begonnen hat, nutzt die Integration die tägliche Fertig-Uhrzeit. Wenn `Tägliche Nacht-Uhrzeit zuerst` gewählt ist, wird die tägliche Fertig-Uhrzeit direkt verwendet.
 
 Hinweis: Die Integration nutzt die nächsten Kalendertermin-Attribute der Kalender-Entität (`message`, `start_time`, `end_time`). Für sehr komplexe Kalender mit mehreren parallelen Terminen ist die Kalender-Automation von Home Assistant oft flexibler.
 
@@ -160,4 +160,4 @@ actions:
 Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
 
 
-Version: 1.0.13
+Version: 1.0.17

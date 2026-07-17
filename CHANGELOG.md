@@ -1,16 +1,22 @@
-## 1.0.15
+# Changelog
 
+## 1.0.17
+
+- Ignore calendar events whose start time is equal to or earlier than the current time.
+- Use the configured daily ready time as fallback when calendar priority is selected and the exposed calendar event has already started.
+- Clear the calendar event title/start/end diagnostic values for rejected past or running events.
+- Updated the manifest and German/English documentation to version 1.0.17.
 
 ## 1.0.16
 
 - Fixed the Config Flow label for the 100% full-charge safety extension.
 - The field now uses a UI-safe key so Home Assistant no longer shows `full_charge_extra_minutes` when translations are cached or not resolved.
 
-- Added the full-charge safety extension to the config flow.
-- Added German label: "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand".
-- The 100% target charge extension is now configurable instead of fixed at 10 minutes.
+## 1.0.15
 
-# Changelog
+- Added the full-charge safety extension to the config flow.
+- Added the German label `Zusätzliche Ladezeit bei 100 % Ziel-Ladestand`.
+- Made the 100% target charge extension configurable instead of fixed at 10 minutes.
 
 ## 1.0.14
 
@@ -23,9 +29,7 @@
 - Uses a dedicated UI field key so Home Assistant no longer shows the raw technical label `target_soc` on some frontend versions.
 - Keeps existing configuration compatibility by storing the value internally as `target_soc`.
 
-# Changelog
-
-## 1.0.13
+## 1.0.11
 
 - Added entity selectors to the config/options flow for the current SOC entity and optional calendar entity.
 - Added an internal **Target state of charge** number entity so the target SOC can be changed directly in Home Assistant.
@@ -34,7 +38,7 @@
 
 ## 1.0.10
 
-- Change charge-window behavior: once a charging window starts, the initially calculated required duration is frozen.
+- Changed charge-window behavior: once a charging window starts, the initially calculated required duration is frozen.
 - SOC changes during an active charging window no longer recalculate or shorten the required duration.
 - After the frozen required duration has elapsed, the status changes directly to `not_needed` for the current charge target.
 - Added diagnostic attributes for the locked runtime: `locked_duration_minutes`, `locked_charge_started_at`, and `locked_charge_finished_at`.

@@ -304,6 +304,20 @@ class EVAndBatteryChargerCalculator:
 
         attrs = state.attributes
         event_start = self._parse_datetime(attrs.get("start_time"), now)
+
+        # A calendar entity can continue exposing the currently running event.
+        # Its start_time is then already in the past and must no longer be used
+        # as a future ready-by target. Returning no event also activates the
+        # configured daily ready-time fallback when calendar priority is used.
+        if event_start is None or event_start <= now:
+            return None, {
+                "calendar_entity": calendar_entity,
+                "calendar_event_title": None,
+                "calendar_event_start": None,
+                "calendar_event_end": None,
+                "calendar_event_all_day": None,
+            }
+
         event_end = self._parse_datetime(attrs.get("end_time"), now)
         event_title = attrs.get("message")
         event_all_day = attrs.get("all_day")
