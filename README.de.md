@@ -1,6 +1,6 @@
 # EV and Battery Charger
 
-### Hinweis zu Version 1.0.17
+### Hinweis zu Version 1.2.0
 
 Kalendertermine werden nur noch verwendet, wenn ihre Startzeit in der Zukunft liegt. Ein bereits gestarteter oder vergangener Termin wird verworfen. Bei der Priorität **Kalendertermin zuerst** verwendet die Integration anschließend automatisch die tägliche Fertig-Uhrzeit als Fallback.
 
@@ -160,4 +160,4 @@ actions:
 Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
 
 
-Version: 1.0.17
+Version: 1.2.0

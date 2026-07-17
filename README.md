@@ -1,6 +1,6 @@
 # EV and Battery Charger
 
-### Version 1.0.17
+### Version 1.2.0
 
 Kalendertermine werden nur noch verwendet, wenn ihre Startzeit in der Zukunft liegt. Ein bereits gestarteter oder vergangener Termin wird verworfen. Bei **Kalendertermin zuerst** greift dann automatisch die tägliche Fertig-Uhrzeit als Fallback.
 
@@ -160,14 +160,14 @@ actions:
 Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
 
 
-Version: 1.0.17
+Version: 1.2.0
 
 
 ---
 
 # EV and Battery Charger
 
-### Version 1.0.17
+### Version 1.2.0
 
 Calendar events are accepted only when their start time is in the future. An event that has already started or is in the past is ignored. With **Calendar event first**, the configured daily ready time is used automatically as the fallback.
 
@@ -326,4 +326,4 @@ actions:
 You can stop charging in the same way using the planned charge end sensor.
 
 
-Version: 1.0.17
+Version: 1.2.0

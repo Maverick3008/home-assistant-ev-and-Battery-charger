@@ -1,11 +1,11 @@
 # Changelog
 
-## 1.0.17
+## 1.2.0
 
 - Ignore calendar events whose start time is equal to or earlier than the current time.
 - Use the configured daily ready time as fallback when calendar priority is selected and the exposed calendar event has already started.
 - Clear the calendar event title/start/end diagnostic values for rejected past or running events.
-- Updated the manifest and German/English documentation to version 1.0.17.
+- Updated the manifest and German/English documentation to version 1.2.0.
 
 ## 1.0.16
 
