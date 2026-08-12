@@ -368,11 +368,16 @@ class EVAndBatteryChargerCalculator:
         calendar_ready_by, calendar_details = self._get_calendar_ready_by(calendar_entity, now)
 
         if target_source_priority == TARGET_PRIORITY_DAILY_TIME_FIRST:
-            ready_by = daily_ready_by
-            target_source = TARGET_SOURCE_DAILY_TIME
-            if ready_by is None and calendar_ready_by is not None:
+            # The daily ready time remains the normal overnight target, but an
+            # earlier upcoming calendar event must win so the vehicle is ready
+            # before that appointment. A later calendar event does not postpone
+            # the regular overnight charging target.
+            if calendar_ready_by is not None and calendar_ready_by < daily_ready_by:
                 ready_by = calendar_ready_by
                 target_source = TARGET_SOURCE_CALENDAR
+            else:
+                ready_by = daily_ready_by
+                target_source = TARGET_SOURCE_DAILY_TIME
         elif calendar_ready_by is not None:
             ready_by = calendar_ready_by
             target_source = TARGET_SOURCE_CALENDAR

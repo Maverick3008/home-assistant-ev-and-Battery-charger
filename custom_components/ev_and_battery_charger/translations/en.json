@@ -10,7 +10,7 @@
           "soc_sensor": "Current state of charge",
           "target_soc": "Initial target state of charge",
           "target_time": "Daily ready time",
-          "target_source_priority": "Which target time should be used first?",
+          "target_source_priority": "Charging target logic",
           "battery_size_kwh": "Battery size",
           "charge_power_kw": "Charging power",
           "efficiency": "Charging efficiency factor",
@@ -26,13 +26,13 @@
           "soc_sensor": "Select the entity that provides the current state of charge in percent, for example sensor.garage_homeassistant_batterie.",
           "target_soc": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "target_time": "The vehicle should be ready every day at this time.",
-          "target_source_priority": "Choose which target time has priority: the next calendar event or the configured daily overnight time.",
+          "target_source_priority": "“Calendar event first” always uses the next future calendar event. “Prefer daily overnight time” normally uses the daily ready time, but automatically switches to a calendar event when that event occurs earlier.",
           "battery_size_kwh": "Usable battery capacity in kWh.",
           "charge_power_kw": "Expected charging power in kW.",
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
           "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
           "full_charge_extra_minutes": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes.",
-          "calendar_entity": "Optional: select a calendar.* entity. Only events with a start time in the future are used as the ready time.",
+          "calendar_entity": "Optional: select a calendar.* entity. Only events with a start time in the future are considered. With “Prefer daily overnight time”, an event overrides the daily time only when it occurs earlier.",
           "ziel_ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes."
@@ -46,7 +46,7 @@
           "soc_sensor": "Current state of charge",
           "target_soc": "Initial target state of charge",
           "target_time": "Daily ready time",
-          "target_source_priority": "Which target time should be used first?",
+          "target_source_priority": "Charging target logic",
           "battery_size_kwh": "Battery size",
           "charge_power_kw": "Charging power",
           "efficiency": "Charging efficiency factor",
@@ -62,13 +62,13 @@
           "soc_sensor": "Select the entity that provides the current state of charge in percent, for example sensor.garage_homeassistant_batterie.",
           "target_soc": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "target_time": "The vehicle should be ready every day at this time.",
-          "target_source_priority": "Choose which target time has priority: the next calendar event or the configured daily overnight time.",
+          "target_source_priority": "“Calendar event first” always uses the next future calendar event. “Prefer daily overnight time” normally uses the daily ready time, but automatically switches to a calendar event when that event occurs earlier.",
           "battery_size_kwh": "Usable battery capacity in kWh.",
           "charge_power_kw": "Expected charging power in kW.",
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
           "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
           "full_charge_extra_minutes": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes.",
-          "calendar_entity": "Optional: select a calendar.* entity. Only events with a start time in the future are used as the ready time.",
+          "calendar_entity": "Optional: select a calendar.* entity. Only events with a start time in the future are considered. With “Prefer daily overnight time”, an event overrides the daily time only when it occurs earlier.",
           "ziel_ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes."
@@ -84,7 +84,7 @@
       "must_not_be_negative": "The value must not be negative.",
       "invalid_calendar_entity": "Please enter a valid calendar entity, for example calendar.cupra_charging, or leave the field empty.",
       "invalid_number": "Please enter a valid number.",
-      "invalid_target_source_priority": "Please choose Calendar event first or Daily overnight time first.",
+      "invalid_target_source_priority": "Please choose a valid charging target logic.",
       "invalid_target_soc": "The target state of charge must be between 0 and 100%."
     },
     "abort": {
@@ -97,13 +97,13 @@
     "step": {
       "init": {
         "title": "EV and Battery Charger options",
-        "description": "Adjust the entities, optional calendar, priority, and charging parameters for the charging plan.",
+        "description": "Adjust the entities, optional calendar, charging target logic, and charging parameters for the charging plan.",
         "data": {
           "name": "Name",
           "soc_sensor": "Current state of charge",
           "target_soc": "Initial target state of charge",
           "target_time": "Daily ready time",
-          "target_source_priority": "Which target time should be used first?",
+          "target_source_priority": "Charging target logic",
           "battery_size_kwh": "Battery size",
           "charge_power_kw": "Charging power",
           "efficiency": "Charging efficiency factor",
@@ -119,13 +119,13 @@
           "soc_sensor": "Select the entity that provides the current state of charge in percent, for example sensor.garage_homeassistant_batterie.",
           "target_soc": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "target_time": "The vehicle should be ready every day at this time.",
-          "target_source_priority": "Choose which target time has priority: the next calendar event or the configured daily overnight time.",
+          "target_source_priority": "“Calendar event first” always uses the next future calendar event. “Prefer daily overnight time” normally uses the daily ready time, but automatically switches to a calendar event when that event occurs earlier.",
           "battery_size_kwh": "Usable battery capacity in kWh.",
           "charge_power_kw": "Expected charging power in kW.",
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
           "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
           "full_charge_extra_minutes": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes.",
-          "calendar_entity": "Optional: select a calendar.* entity. Only events with a start time in the future are used as the ready time.",
+          "calendar_entity": "Optional: select a calendar.* entity. Only events with a start time in the future are considered. With “Prefer daily overnight time”, an event overrides the daily time only when it occurs earlier.",
           "ziel_ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
           "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes."
@@ -141,7 +141,7 @@
       "must_not_be_negative": "The value must not be negative.",
       "invalid_calendar_entity": "Please enter a valid calendar entity, for example calendar.cupra_charging, or leave the field empty.",
       "invalid_number": "Please enter a valid number.",
-      "invalid_target_source_priority": "Please choose Calendar event first or Daily overnight time first.",
+      "invalid_target_source_priority": "Please choose a valid charging target logic.",
       "invalid_target_soc": "The target state of charge must be between 0 and 100%."
     },
     "abort": {
@@ -191,7 +191,7 @@
         "name": "Target source priority",
         "state": {
           "calendar_first": "Calendar event first",
-          "daily_time_first": "Daily overnight time first"
+          "daily_time_first": "Prefer daily overnight time (earlier events first)"
         }
       }
     },
@@ -205,7 +205,7 @@
     "target_source_priority": {
       "options": {
         "calendar_first": "Calendar event first",
-        "daily_time_first": "Daily overnight time first"
+        "daily_time_first": "Prefer daily overnight time (earlier events first)"
       }
     }
   }

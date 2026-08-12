@@ -10,7 +10,7 @@
           "soc_sensor": "Aktueller Ladestand",
           "target_soc": "Ziel-Ladestand",
           "target_time": "Tägliche Fertig-Uhrzeit",
-          "target_source_priority": "Welche Zielzeit zuerst verwenden?",
+          "target_source_priority": "Auswahl der Ladeziel-Logik",
           "battery_size_kwh": "Batteriegröße",
           "charge_power_kw": "Ladeleistung",
           "efficiency": "Ladeeffizienz-Faktor",
@@ -26,13 +26,13 @@
           "soc_sensor": "Wähle die Entität aus, die den aktuellen Ladestand in Prozent liefert, zum Beispiel sensor.garage_homeassistant_batterie.",
           "target_soc": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
           "target_time": "Zu dieser Uhrzeit soll das Fahrzeug jeden Tag fertig geladen sein.",
-          "target_source_priority": "Wähle, welche Zielzeit Vorrang hat: der nächste Kalendertermin oder die täglich festgelegte Nacht-Uhrzeit.",
+          "target_source_priority": "„Kalendertermin zuerst“ verwendet immer den nächsten zukünftigen Kalendertermin. „Nacht-Uhrzeit bevorzugt“ nutzt normalerweise die tägliche Fertig-Uhrzeit, schaltet aber automatisch auf einen Kalendertermin um, wenn dieser früher liegt.",
           "battery_size_kwh": "Nutzbare Batteriekapazität in kWh.",
           "charge_power_kw": "Erwartete Ladeleistung in kW.",
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
           "full_charge_extra_minutes": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur addiert wird, wenn der Ziel-Ladestand 100 % beträgt und noch geladen werden muss. Standard: 10 Minuten.",
-          "calendar_entity": "Optional: Wähle eine calendar.* Entität. Nur Termine mit einer Startzeit in der Zukunft werden als Fertig-Zeit verwendet.",
+          "calendar_entity": "Optional: Wähle eine calendar.* Entität. Nur Termine mit einer Startzeit in der Zukunft werden berücksichtigt. Bei „Nacht-Uhrzeit bevorzugt“ überschreibt ein Termin die tägliche Uhrzeit nur, wenn er früher liegt.",
           "ziel_ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
           "Ziel-Ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
           "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur addiert wird, wenn der Ziel-Ladestand 100 % beträgt und noch geladen werden muss. Standard: 10 Minuten."
@@ -46,7 +46,7 @@
           "soc_sensor": "Aktueller Ladestand",
           "target_soc": "Ziel-Ladestand",
           "target_time": "Tägliche Fertig-Uhrzeit",
-          "target_source_priority": "Welche Zielzeit zuerst verwenden?",
+          "target_source_priority": "Auswahl der Ladeziel-Logik",
           "battery_size_kwh": "Batteriegröße",
           "charge_power_kw": "Ladeleistung",
           "efficiency": "Ladeeffizienz-Faktor",
@@ -62,13 +62,13 @@
           "soc_sensor": "Wähle die Entität aus, die den aktuellen Ladestand in Prozent liefert, zum Beispiel sensor.garage_homeassistant_batterie.",
           "target_soc": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
           "target_time": "Zu dieser Uhrzeit soll das Fahrzeug jeden Tag fertig geladen sein.",
-          "target_source_priority": "Wähle, welche Zielzeit Vorrang hat: der nächste Kalendertermin oder die täglich festgelegte Nacht-Uhrzeit.",
+          "target_source_priority": "„Kalendertermin zuerst“ verwendet immer den nächsten zukünftigen Kalendertermin. „Nacht-Uhrzeit bevorzugt“ nutzt normalerweise die tägliche Fertig-Uhrzeit, schaltet aber automatisch auf einen Kalendertermin um, wenn dieser früher liegt.",
           "battery_size_kwh": "Nutzbare Batteriekapazität in kWh.",
           "charge_power_kw": "Erwartete Ladeleistung in kW.",
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
           "full_charge_extra_minutes": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur addiert wird, wenn der Ziel-Ladestand 100 % beträgt und noch geladen werden muss. Standard: 10 Minuten.",
-          "calendar_entity": "Optional: Wähle eine calendar.* Entität. Nur Termine mit einer Startzeit in der Zukunft werden als Fertig-Zeit verwendet.",
+          "calendar_entity": "Optional: Wähle eine calendar.* Entität. Nur Termine mit einer Startzeit in der Zukunft werden berücksichtigt. Bei „Nacht-Uhrzeit bevorzugt“ überschreibt ein Termin die tägliche Uhrzeit nur, wenn er früher liegt.",
           "ziel_ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
           "Ziel-Ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
           "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur addiert wird, wenn der Ziel-Ladestand 100 % beträgt und noch geladen werden muss. Standard: 10 Minuten."
@@ -84,7 +84,7 @@
       "must_not_be_negative": "Der Wert darf nicht negativ sein.",
       "invalid_calendar_entity": "Bitte gib eine gültige Kalender-Entität ein, zum Beispiel calendar.ladung_cupra, oder lasse das Feld leer.",
       "invalid_number": "Bitte gib eine gültige Zahl ein.",
-      "invalid_target_source_priority": "Bitte wähle Kalendertermin zuerst oder Tägliche Nacht-Uhrzeit zuerst.",
+      "invalid_target_source_priority": "Bitte wähle eine gültige Ladeziel-Logik.",
       "invalid_target_soc": "Der Ziel-Ladestand muss zwischen 0 und 100 % liegen."
     },
     "abort": {
@@ -97,13 +97,13 @@
     "step": {
       "init": {
         "title": "Optionen für EV and Battery Charger",
-        "description": "Passe die Entitäten, den optionalen Kalender, die Priorität und die Ladeparameter für den Ladeplan an.",
+        "description": "Passe die Entitäten, den optionalen Kalender, die Ladeziel-Logik und die Ladeparameter für den Ladeplan an.",
         "data": {
           "name": "Bezeichnung",
           "soc_sensor": "Aktueller Ladestand",
           "target_soc": "Ziel-Ladestand",
           "target_time": "Tägliche Fertig-Uhrzeit",
-          "target_source_priority": "Welche Zielzeit zuerst verwenden?",
+          "target_source_priority": "Auswahl der Ladeziel-Logik",
           "battery_size_kwh": "Batteriegröße",
           "charge_power_kw": "Ladeleistung",
           "efficiency": "Ladeeffizienz-Faktor",
@@ -119,13 +119,13 @@
           "soc_sensor": "Wähle die Entität aus, die den aktuellen Ladestand in Prozent liefert, zum Beispiel sensor.garage_homeassistant_batterie.",
           "target_soc": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
           "target_time": "Zu dieser Uhrzeit soll das Fahrzeug jeden Tag fertig geladen sein.",
-          "target_source_priority": "Wähle, welche Zielzeit Vorrang hat: der nächste Kalendertermin oder die täglich festgelegte Nacht-Uhrzeit.",
+          "target_source_priority": "„Kalendertermin zuerst“ verwendet immer den nächsten zukünftigen Kalendertermin. „Nacht-Uhrzeit bevorzugt“ nutzt normalerweise die tägliche Fertig-Uhrzeit, schaltet aber automatisch auf einen Kalendertermin um, wenn dieser früher liegt.",
           "battery_size_kwh": "Nutzbare Batteriekapazität in kWh.",
           "charge_power_kw": "Erwartete Ladeleistung in kW.",
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
           "full_charge_extra_minutes": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur addiert wird, wenn der Ziel-Ladestand 100 % beträgt und noch geladen werden muss. Standard: 10 Minuten.",
-          "calendar_entity": "Optional: Wähle eine calendar.* Entität. Nur Termine mit einer Startzeit in der Zukunft werden als Fertig-Zeit verwendet.",
+          "calendar_entity": "Optional: Wähle eine calendar.* Entität. Nur Termine mit einer Startzeit in der Zukunft werden berücksichtigt. Bei „Nacht-Uhrzeit bevorzugt“ überschreibt ein Termin die tägliche Uhrzeit nur, wenn er früher liegt.",
           "ziel_ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
           "Ziel-Ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
           "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur addiert wird, wenn der Ziel-Ladestand 100 % beträgt und noch geladen werden muss. Standard: 10 Minuten."
@@ -141,7 +141,7 @@
       "must_not_be_negative": "Der Wert darf nicht negativ sein.",
       "invalid_calendar_entity": "Bitte gib eine gültige Kalender-Entität ein, zum Beispiel calendar.ladung_cupra, oder lasse das Feld leer.",
       "invalid_number": "Bitte gib eine gültige Zahl ein.",
-      "invalid_target_source_priority": "Bitte wähle Kalendertermin zuerst oder Tägliche Nacht-Uhrzeit zuerst.",
+      "invalid_target_source_priority": "Bitte wähle eine gültige Ladeziel-Logik.",
       "invalid_target_soc": "Der Ziel-Ladestand muss zwischen 0 und 100 % liegen."
     },
     "abort": {
@@ -191,7 +191,7 @@
         "name": "Ladeziel Priorität",
         "state": {
           "calendar_first": "Kalendertermin zuerst",
-          "daily_time_first": "Tägliche Nacht-Uhrzeit zuerst"
+          "daily_time_first": "Nacht-Uhrzeit bevorzugt (frühere Termine zuerst)"
         }
       }
     },
@@ -205,7 +205,7 @@
     "target_source_priority": {
       "options": {
         "calendar_first": "Kalendertermin zuerst",
-        "daily_time_first": "Tägliche Nacht-Uhrzeit zuerst"
+        "daily_time_first": "Nacht-Uhrzeit bevorzugt (frühere Termine zuerst)"
       }
     }
   }

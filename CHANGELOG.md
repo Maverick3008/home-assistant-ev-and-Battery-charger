@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0
+
+- Changed `daily_time_first` behavior so the daily overnight target remains the default, but an earlier future calendar event automatically becomes the active ready-by target.
+- Calendar events later than the next daily ready time no longer affect the preferred overnight charging plan.
+- Kept the internal `daily_time_first` value for backward compatibility with existing config entries.
+- Updated German and English labels/descriptions to make the new priority behavior explicit.
+- Updated manifest and documentation to version 1.3.0.
+
 ## 1.2.0
 
 - Ignore calendar events whose start time is equal to or earlier than the current time.

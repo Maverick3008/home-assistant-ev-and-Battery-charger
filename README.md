@@ -1,13 +1,13 @@
 # EV and Battery Charger
 
-### Version 1.2.0
+### Hinweis zu Version 1.3.0
 
-Kalendertermine werden nur noch verwendet, wenn ihre Startzeit in der Zukunft liegt. Ein bereits gestarteter oder vergangener Termin wird verworfen. Bei **Kalendertermin zuerst** greift dann automatisch die tägliche Fertig-Uhrzeit als Fallback.
+Bei der Ladeziel-Logik **Nacht-Uhrzeit bevorzugt (frühere Termine zuerst)** wird jetzt zusätzlich geprüft, ob der nächste zukünftige Kalendertermin **vor** der nächsten täglichen Fertig-Uhrzeit liegt. Ist das der Fall, wird automatisch der Kalendertermin als Ladeziel verwendet. Ein späterer Kalendertermin verschiebt die normale Nachtladung dagegen nicht. **Kalendertermin zuerst** arbeitet weiterhin wie bisher.
 
 
 **EV and Battery Charger** ist eine Home-Assistant-Custom-Integration zur Berechnung der Ladedauer, des geplanten Ladestarts und des geplanten Ladeendes für ein E-Auto, Plug-in-Hybrid-Fahrzeug oder einen Batteriespeicher.
 
-Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder optional den **nächsten Termin aus einem Home-Assistant-Kalender** verwenden. Im Config Flow kannst du jetzt festlegen, welche Quelle Vorrang hat: **Kalender zuerst** oder **tägliche Uhrzeit zuerst**. Das geplante Ladeende liegt weiterhin um den konfigurierten Puffer davor, zum Beispiel 30 Minuten.
+Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder optional den **nächsten Termin aus einem Home-Assistant-Kalender** verwenden. Im Config Flow kannst du festlegen, ob **Kalendertermin zuerst** gelten soll oder ob die **Nacht-Uhrzeit bevorzugt** wird, wobei ein früherer Kalendertermin automatisch Vorrang erhält. Das geplante Ladeende liegt weiterhin um den konfigurierten Puffer davor, zum Beispiel 30 Minuten.
 
 ## Funktionen
 
@@ -16,7 +16,9 @@ Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder op
 - Berechnung des geplanten Ladestarts
 - Berechnung des geplanten Ladeendes mit Puffer
 - Optional: Ladeplanung anhand des nächsten Home-Assistant-Kalendertermins
-- Auswahl der Priorität: Kalender zuerst oder tägliche Uhrzeit zuerst
+- Auswahl der Ladeziel-Logik: Kalendertermin zuerst oder Nacht-Uhrzeit bevorzugt
+- Bei Nacht-Uhrzeit bevorzugt: ein früherer zukünftiger Kalendertermin überschreibt automatisch die Nachtladung
+- Ein späterer Kalendertermin verschiebt die normale Nachtladung nicht
 - Fallback auf tägliche Fertig-Uhrzeit, wenn Kalender zuerst gewählt ist und kein Kalendertermin verfügbar ist
 - Eigene Zahl-Entität für den Ziel-Ladestand (`number.*`)
 - Bei Ziel-Ladestand 100 % wird ein konfigurierbarer Sicherheitsaufschlag zur Ladedauer addiert
@@ -63,10 +65,12 @@ Kalendertermin zuerst
 oder:
 
 ```text
-Tägliche Nacht-Uhrzeit zuerst
+Nacht-Uhrzeit bevorzugt (frühere Termine zuerst)
 ```
 
-Bei `Kalendertermin zuerst` verwendet die Integration den nächsten Kalendertermin als Ziel-Zeitpunkt, sofern dessen Startzeit noch in der Zukunft liegt. Bei `Tägliche Nacht-Uhrzeit zuerst` verwendet sie die tägliche Fertig-Uhrzeit als Hauptquelle.
+Bei `Kalendertermin zuerst` verwendet die Integration den nächsten Kalendertermin als Ziel-Zeitpunkt, sofern dessen Startzeit noch in der Zukunft liegt.
+
+Bei `Nacht-Uhrzeit bevorzugt (frühere Termine zuerst)` ist die tägliche Fertig-Uhrzeit das normale Ladeziel. Liegt der nächste zukünftige Kalendertermin jedoch **früher** als diese tägliche Fertig-Uhrzeit, wird stattdessen der Kalendertermin verwendet. Liegt der Kalendertermin später, bleibt die Nacht-Uhrzeit aktiv.
 
 Beispiel mit `Kalendertermin zuerst`:
 
@@ -82,7 +86,21 @@ Geplantes Ladeende: Morgen 07:30 Uhr
 Geplanter Ladestart: Morgen 06:00 Uhr
 ```
 
-Wenn `Kalendertermin zuerst` gewählt ist und kein Kalender eingetragen ist, kein `start_time` verfügbar ist oder der Termin bereits begonnen hat, nutzt die Integration die tägliche Fertig-Uhrzeit. Wenn `Tägliche Nacht-Uhrzeit zuerst` gewählt ist, wird die tägliche Fertig-Uhrzeit direkt verwendet.
+Beispiel mit `Nacht-Uhrzeit bevorzugt (frühere Termine zuerst)`:
+
+- Jetzt: `12:30 Uhr`
+- Nächster Kalendertermin: `13:30 Uhr`
+- Nächste tägliche Fertig-Uhrzeit: `Morgen 06:00 Uhr`
+
+Ergebnis: Der Kalendertermin um `13:30 Uhr` wird zum aktiven Ladeziel, weil er vor der nächsten Nachtladung liegt. Wäre der Kalendertermin erst nach `Morgen 06:00 Uhr`, bliebe die tägliche Fertig-Uhrzeit das Ladeziel.
+
+Wenn `Kalendertermin zuerst` gewählt ist und kein Kalender eingetragen ist, kein `start_time` verfügbar ist oder der Termin bereits begonnen hat, nutzt die Integration die tägliche Fertig-Uhrzeit.
+
+Bei `Nacht-Uhrzeit bevorzugt (frühere Termine zuerst)` gilt:
+
+- Kalendertermin **vor** der nächsten Nacht-Uhrzeit → Kalendertermin wird Ladeziel.
+- Kalendertermin **nach** der nächsten Nacht-Uhrzeit → Nacht-Uhrzeit bleibt Ladeziel.
+- Kein gültiger zukünftiger Kalendertermin → Nacht-Uhrzeit bleibt Ladeziel.
 
 Hinweis: Die Integration nutzt die nächsten Kalendertermin-Attribute der Kalender-Entität (`message`, `start_time`, `end_time`). Für sehr komplexe Kalender mit mehreren parallelen Terminen ist die Kalender-Automation von Home Assistant oft flexibler.
 
@@ -98,7 +116,7 @@ Hinweis: Die Integration nutzt die nächsten Kalendertermin-Attribute der Kalend
 | Nächster Kalendertermin Start | Startzeit des nächsten Kalendertermins, falls verfügbar |
 | Nächster Kalendertermin | Titel des nächsten Kalendertermins, falls verfügbar |
 | Ladeziel Quelle | `daily_time` oder `calendar` |
-| Ladeziel Priorität | `Kalendertermin zuerst` oder `Tägliche Nacht-Uhrzeit zuerst` |
+| Ladeziel Priorität | `Kalendertermin zuerst` oder `Nacht-Uhrzeit bevorzugt (frühere Termine zuerst)` |
 | Ladeplan Status | `not_needed`, `waiting`, `charging_window` oder `late` |
 
 Zusätzlich wird eine Zahl-Entität erstellt:
@@ -160,20 +178,20 @@ actions:
 Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
 
 
-Version: 1.2.0
-
+Version: 1.3.0
 
 ---
 
 # EV and Battery Charger
 
-### Version 1.2.0
+### Note for version 1.3.0
 
-Calendar events are accepted only when their start time is in the future. An event that has already started or is in the past is ignored. With **Calendar event first**, the configured daily ready time is used automatically as the fallback.
+With **Prefer daily overnight time (earlier events first)**, the integration now also checks whether the next future calendar event occurs **before** the next daily ready time. If it does, the calendar event automatically becomes the active charging target. A later calendar event does not postpone the normal overnight charge. **Calendar event first** continues to work as before.
+
 
 **EV and Battery Charger** is a Home Assistant custom integration that calculates charging duration, planned charging start and planned charging end for an electric vehicle, plug-in hybrid or battery storage system.
 
-The integration can use a fixed daily ready-by time or optionally use the **next event from a Home Assistant calendar**. The config flow now lets you choose which source has priority: **calendar first** or **daily time first**. The planned charging end is still placed before the selected ready-by time by the configured buffer, for example 30 minutes.
+The integration can use a fixed daily ready-by time or optionally use the **next event from a Home Assistant calendar**. The config flow lets you choose either **Calendar event first** or **Prefer daily overnight time**, where an earlier calendar event automatically takes precedence. The planned charging end is still placed before the selected ready-by time by the configured buffer, for example 30 minutes.
 
 ## Features
 
@@ -182,7 +200,9 @@ The integration can use a fixed daily ready-by time or optionally use the **next
 - Calculates planned charging start
 - Calculates planned charging end with buffer
 - Optional: charging plan based on the next Home Assistant calendar event
-- Priority selection: calendar first or daily time first
+- Charging target logic: calendar event first or prefer daily overnight time
+- With preferred overnight charging, an earlier future calendar event automatically overrides the overnight target
+- A later calendar event does not postpone the normal overnight charge
 - Falls back to the daily ready-by time when calendar first is selected and no calendar event is available
 - Dedicated target state of charge number entity (`number.*`)
 - Adds a configurable safety extension when the target state of charge is 100%
@@ -229,10 +249,12 @@ Calendar event first
 or:
 
 ```text
-Daily overnight time first
+Prefer daily overnight time (earlier events first)
 ```
 
-With `Calendar event first`, the integration uses the next calendar event as the target ready-by time only if its start time is still in the future. With `Daily overnight time first`, it uses the daily ready-by time as the primary source.
+With `Calendar event first`, the integration uses the next calendar event as the target ready-by time only if its start time is still in the future.
+
+With `Prefer daily overnight time (earlier events first)`, the daily ready time is the normal target. However, if the next future calendar event occurs **earlier** than that daily ready time, the calendar event is used instead. If the calendar event is later, the daily overnight target remains active.
 
 Example with `Calendar event first`:
 
@@ -248,7 +270,21 @@ Planned charge end: Tomorrow 07:30
 Planned charge start: Tomorrow 06:00
 ```
 
-If `Calendar event first` is selected and no calendar is configured, no `start_time` is available, or the event has already started, the integration uses the daily ready-by time. If `Daily overnight time first` is selected, the daily ready-by time is used directly.
+Example with `Prefer daily overnight time (earlier events first)`:
+
+- Current time: `12:30`
+- Next calendar event: `13:30`
+- Next daily ready time: `Tomorrow 06:00`
+
+Result: the `13:30` calendar event becomes the active charging target because it occurs before the next overnight target. If the event were after `Tomorrow 06:00`, the daily ready time would remain active.
+
+If `Calendar event first` is selected and no calendar is configured, no `start_time` is available, or the event has already started, the integration uses the daily ready-by time.
+
+With `Prefer daily overnight time (earlier events first)`:
+
+- Calendar event **before** the next overnight target → the calendar event becomes the charging target.
+- Calendar event **after** the next overnight target → the overnight target stays active.
+- No valid future calendar event → the overnight target stays active.
 
 Note: The integration uses the next-event attributes of the calendar entity (`message`, `start_time`, `end_time`). For complex calendars with multiple overlapping events, Home Assistant calendar automations may be more flexible.
 
@@ -264,7 +300,7 @@ Note: The integration uses the next-event attributes of the calendar entity (`me
 | Next calendar event start | Start time of the next calendar event, if available |
 | Next calendar event | Title of the next calendar event, if available |
 | Target source | `daily_time` or `calendar` |
-| Target source priority | `Calendar event first` or `Daily overnight time first` |
+| Target source priority | `Calendar event first` or `Prefer daily overnight time (earlier events first)` |
 | Charge plan status | `not_needed`, `waiting`, `charging_window` or `late` |
 
 A number entity is also created:
@@ -326,4 +362,4 @@ actions:
 You can stop charging in the same way using the planned charge end sensor.
 
 
-Version: 1.2.0
+Version: 1.3.0
