@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.0
+
+- Automatically set the integration's target state of charge to **100%** as soon as the selected calendar exposes a future event.
+- Automatically reset the target state of charge to **80%** after the associated locked charge cycle has completed.
+- Track completed calendar events so the same still-visible event cannot immediately switch the target back to 100%.
+- Reset the target to 80% when an active, not-yet-completed calendar event is removed.
+- Refresh the configured calendar entity every **30 minutes** using `homeassistant.update_entity`; this significantly shortens the effective update interval for Home Assistant Remote Calendar compared with its normal 24-hour polling.
+- Refresh only the calendar entity selected for this charger rather than all Home Assistant calendars.
+- Keep the visible target SOC number entity synchronized with automatic calendar-driven changes.
+- Updated English/German documentation and translations for version 1.4.0.
+
 ## 1.3.0
 
 - Changed `daily_time_first` behavior so the daily overnight target remains the default, but an earlier future calendar event automatically becomes the active ready-by target.

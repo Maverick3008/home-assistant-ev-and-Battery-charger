@@ -2,7 +2,8 @@
   "name": "EV and Battery Charger",
   "render_readme": true,
   "domains": [
-    "sensor"
+    "sensor",
+    "number"
   ],
   "iot_class": "calculated",
   "homeassistant": "2025.1.0"

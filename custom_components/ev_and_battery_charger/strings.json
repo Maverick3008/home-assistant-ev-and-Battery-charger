@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "EV and Battery Charger",
-        "description": "Calculates charging duration, planned charging start, and planned charging end for an EV, plug-in hybrid, or battery storage system. The current charge entity and optional calendar can be selected directly. The target state of charge is provided as a dedicated number entity by the integration.",
+        "description": "Calculates charging duration, planned charging start and end. Version 1.4.0 refreshes the selected calendar every 30 minutes, immediately sets the target SOC to 100% when a future event is found, and resets it to 80% after charging completes.",
         "data": {
           "name": "Name",
           "soc_sensor": "Current state of charge",
@@ -24,7 +24,7 @@
         "data_description": {
           "name": "Example: Cupra Leon or home battery",
           "soc_sensor": "Select the entity that provides the current state of charge in percent, for example sensor.garage_homeassistant_batterie.",
-          "target_soc": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
+          "target_soc": "Normal starting value of the “Target state of charge” entity. With a future calendar event, version 1.4.0 automatically changes it to 100% and resets it to 80% after charging completes.",
           "target_time": "The vehicle should be ready every day at this time.",
           "target_source_priority": "“Calendar event first” always uses the next future calendar event. “Prefer daily overnight time” normally uses the daily ready time, but automatically switches to a calendar event when that event occurs earlier.",
           "battery_size_kwh": "Usable battery capacity in kWh.",
@@ -32,10 +32,10 @@
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
           "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
           "full_charge_extra_minutes": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes.",
-          "calendar_entity": "Optional: select a calendar.* entity. Only events with a start time in the future are considered. With “Prefer daily overnight time”, an event overrides the daily time only when it occurs earlier.",
-          "ziel_ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
-          "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
-          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes."
+          "calendar_entity": "Optional: select a calendar.* entity. The integration refreshes exactly this calendar every 30 minutes using homeassistant.update_entity. As soon as a future event is exposed, the target state of charge is automatically set to 100%. After the related charge cycle completes, it is reset to 80%.",
+          "ziel_ladestand": "Normal starting value of the target SOC entity. Calendar events can temporarily set it to 100% automatically.",
+          "Ziel-Ladestand": "Normal starting value of the target SOC entity. Calendar events can temporarily set it to 100% automatically.",
+          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes that is only added at a 100% target. Default: 10 minutes."
         }
       },
       "reconfigure": {
@@ -60,7 +60,7 @@
         "data_description": {
           "name": "Example: Cupra Leon or home battery",
           "soc_sensor": "Select the entity that provides the current state of charge in percent, for example sensor.garage_homeassistant_batterie.",
-          "target_soc": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
+          "target_soc": "Normal starting value of the “Target state of charge” entity. With a future calendar event, version 1.4.0 automatically changes it to 100% and resets it to 80% after charging completes.",
           "target_time": "The vehicle should be ready every day at this time.",
           "target_source_priority": "“Calendar event first” always uses the next future calendar event. “Prefer daily overnight time” normally uses the daily ready time, but automatically switches to a calendar event when that event occurs earlier.",
           "battery_size_kwh": "Usable battery capacity in kWh.",
@@ -68,10 +68,10 @@
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
           "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
           "full_charge_extra_minutes": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes.",
-          "calendar_entity": "Optional: select a calendar.* entity. Only events with a start time in the future are considered. With “Prefer daily overnight time”, an event overrides the daily time only when it occurs earlier.",
-          "ziel_ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
-          "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
-          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes."
+          "calendar_entity": "Optional: select a calendar.* entity. The integration refreshes exactly this calendar every 30 minutes using homeassistant.update_entity. As soon as a future event is exposed, the target state of charge is automatically set to 100%. After the related charge cycle completes, it is reset to 80%.",
+          "ziel_ladestand": "Normal starting value of the target SOC entity. Calendar events can temporarily set it to 100% automatically.",
+          "Ziel-Ladestand": "Normal starting value of the target SOC entity. Calendar events can temporarily set it to 100% automatically.",
+          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes that is only added at a 100% target. Default: 10 minutes."
         }
       }
     },
@@ -97,7 +97,7 @@
     "step": {
       "init": {
         "title": "EV and Battery Charger options",
-        "description": "Adjust the entities, optional calendar, charging target logic, and charging parameters for the charging plan.",
+        "description": "Adjust entities, calendar, charging target logic, and charging parameters. The automatic 100% → 80% calendar behavior is active whenever a calendar is selected.",
         "data": {
           "name": "Name",
           "soc_sensor": "Current state of charge",
@@ -117,7 +117,7 @@
         "data_description": {
           "name": "Example: Cupra Leon or home battery",
           "soc_sensor": "Select the entity that provides the current state of charge in percent, for example sensor.garage_homeassistant_batterie.",
-          "target_soc": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
+          "target_soc": "Normal starting value of the “Target state of charge” entity. With a future calendar event, version 1.4.0 automatically changes it to 100% and resets it to 80% after charging completes.",
           "target_time": "The vehicle should be ready every day at this time.",
           "target_source_priority": "“Calendar event first” always uses the next future calendar event. “Prefer daily overnight time” normally uses the daily ready time, but automatically switches to a calendar event when that event occurs earlier.",
           "battery_size_kwh": "Usable battery capacity in kWh.",
@@ -125,10 +125,10 @@
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
           "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
           "full_charge_extra_minutes": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes.",
-          "calendar_entity": "Optional: select a calendar.* entity. Only events with a start time in the future are considered. With “Prefer daily overnight time”, an event overrides the daily time only when it occurs earlier.",
-          "ziel_ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
-          "Ziel-Ladestand": "Initial value for the new “Target state of charge” entity. Later, you can change the target directly through this entity.",
-          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes that is only added when the target state of charge is 100% and charging is still required. Default: 10 minutes."
+          "calendar_entity": "Optional: select a calendar.* entity. The integration refreshes exactly this calendar every 30 minutes using homeassistant.update_entity. As soon as a future event is exposed, the target state of charge is automatically set to 100%. After the related charge cycle completes, it is reset to 80%.",
+          "ziel_ladestand": "Normal starting value of the target SOC entity. Calendar events can temporarily set it to 100% automatically.",
+          "Ziel-Ladestand": "Normal starting value of the target SOC entity. Calendar events can temporarily set it to 100% automatically.",
+          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes that is only added at a 100% target. Default: 10 minutes."
         }
       }
     },

@@ -22,12 +22,14 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_interval
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CALENDAR_AUTO_TARGET_SOC,
+    CALENDAR_RESET_TARGET_SOC,
     CONF_BATTERY_SIZE_KWH,
     CONF_BUFFER_MINUTES,
     CONF_CALENDAR_ENTITY,
@@ -249,6 +251,90 @@ class EVAndBatteryChargerCalculator:
         except (TypeError, ValueError):
             return DEFAULT_TARGET_SOC
 
+    def _set_runtime_target_soc(self, target_soc: float) -> None:
+        """Update the shared target SOC and notify sensors/number entities."""
+        entry_data = self.hass.data.setdefault(DOMAIN, {}).setdefault(self.entry.entry_id, {})
+        if not isinstance(entry_data, dict):
+            return
+
+        target_soc = max(0.0, min(100.0, float(target_soc)))
+        try:
+            current_target = float(entry_data.get("target_soc"))
+        except (TypeError, ValueError):
+            current_target = None
+
+        if current_target == target_soc:
+            return
+
+        entry_data["target_soc"] = target_soc
+        async_dispatcher_send(
+            self.hass,
+            f"{DOMAIN}_{self.entry.entry_id}_{SIGNAL_TARGET_SOC_UPDATED}",
+        )
+
+    @staticmethod
+    def _calendar_event_signature(
+        calendar_entity: str, calendar_details: dict[str, Any]
+    ) -> str | None:
+        """Return a stable signature for the currently exposed future event."""
+        event_start = calendar_details.get("calendar_event_start")
+        if not calendar_entity or not isinstance(event_start, datetime):
+            return None
+        event_title = str(calendar_details.get("calendar_event_title") or "")
+        event_end = calendar_details.get("calendar_event_end")
+        event_end_text = event_end.isoformat() if isinstance(event_end, datetime) else ""
+        return f"{calendar_entity}|{event_start.isoformat()}|{event_end_text}|{event_title}"
+
+    def _sync_calendar_target_soc(self, event_signature: str | None) -> None:
+        """Apply the automatic 100% calendar target or reset it to 80%.
+
+        A future event raises the target to 100% exactly once for that event.
+        After its charge cycle has completed, the event is marked as completed
+        so it cannot immediately raise the target again while it is still the
+        next event exposed by the calendar entity.
+        """
+        entry_data = self.hass.data.setdefault(DOMAIN, {}).setdefault(self.entry.entry_id, {})
+        if not isinstance(entry_data, dict):
+            return
+
+        active_event = entry_data.get("calendar_target_event")
+        completed_event = entry_data.get("calendar_completed_event")
+
+        if event_signature is None:
+            if active_event is not None:
+                entry_data["calendar_target_event"] = None
+                self._set_runtime_target_soc(CALENDAR_RESET_TARGET_SOC)
+            # Once the completed event disappears from the calendar entity, the
+            # next future event is allowed to trigger the automation again.
+            entry_data["calendar_completed_event"] = None
+            return
+
+        if event_signature == completed_event:
+            entry_data["calendar_target_event"] = None
+            return
+
+        if event_signature != active_event:
+            entry_data["calendar_target_event"] = event_signature
+            entry_data["calendar_completed_event"] = None
+
+        # Keep 100% enforced while this uncompleted calendar event is active.
+        self._set_runtime_target_soc(CALENDAR_AUTO_TARGET_SOC)
+
+    def _complete_calendar_target(self, event_signature: str | None) -> None:
+        """Mark a calendar charge as completed and restore the 80% target."""
+        if event_signature is None:
+            return
+
+        entry_data = self.hass.data.setdefault(DOMAIN, {}).setdefault(self.entry.entry_id, {})
+        if not isinstance(entry_data, dict):
+            return
+        if entry_data.get("calendar_target_event") != event_signature:
+            return
+
+        entry_data["calendar_target_event"] = None
+        entry_data["calendar_completed_event"] = event_signature
+        self._set_runtime_target_soc(CALENDAR_RESET_TARGET_SOC)
+
     @staticmethod
     def _parse_time(value: str | time) -> time:
         """Parse a Home Assistant time selector value."""
@@ -344,8 +430,7 @@ class EVAndBatteryChargerCalculator:
         soc_entity = config[CONF_SOC_SENSOR]
 
         current_soc = self._get_float_state(soc_entity)
-        target_soc = self._get_target_soc()
-        if current_soc is None or target_soc is None:
+        if current_soc is None:
             return None
 
         battery_size_kwh = float(config.get(CONF_BATTERY_SIZE_KWH, DEFAULT_BATTERY_SIZE_KWH))
@@ -366,6 +451,17 @@ class EVAndBatteryChargerCalculator:
         now = dt_util.now()
         daily_ready_by = self._get_daily_ready_by(target_time_value, now)
         calendar_ready_by, calendar_details = self._get_calendar_ready_by(calendar_entity, now)
+        calendar_event_signature = self._calendar_event_signature(
+            calendar_entity, calendar_details
+        )
+
+        # Any newly exposed future calendar event immediately raises the target
+        # SOC to 100%, regardless of whether the calendar event or the daily
+        # ready time ultimately becomes the active ready-by source.
+        self._sync_calendar_target_soc(calendar_event_signature)
+        target_soc = self._get_target_soc()
+        if target_soc is None:
+            return None
 
         if target_source_priority == TARGET_PRIORITY_DAILY_TIME_FIRST:
             # The daily ready time remains the normal overnight target, but an
@@ -446,6 +542,7 @@ class EVAndBatteryChargerCalculator:
             self._locked_charge_finished_at = None
 
         charging_window_locked = False
+        charge_cycle_completed_now = False
 
         if self._completed_charge_window_signature == charge_window_signature:
             status = "not_needed"
@@ -473,6 +570,7 @@ class EVAndBatteryChargerCalculator:
                 status = "not_needed"
                 self._active_charge_window = False
                 self._completed_charge_window_signature = charge_window_signature
+                charge_cycle_completed_now = True
                 duration_minutes = 0
                 exact_duration_minutes = 0.0
                 energy_needed_kwh = 0.0
@@ -495,6 +593,13 @@ class EVAndBatteryChargerCalculator:
             planned_end = self._locked_charge_finished_at
         else:
             status = "late"
+
+        if charge_cycle_completed_now or (
+            duration_minutes == 0
+            and current_soc >= CALENDAR_AUTO_TARGET_SOC
+            and calendar_event_signature is not None
+        ):
+            self._complete_calendar_target(calendar_event_signature)
 
         minutes_until_start = round((planned_start - now).total_seconds() / 60)
         minutes_until_end = round((planned_end - now).total_seconds() / 60)

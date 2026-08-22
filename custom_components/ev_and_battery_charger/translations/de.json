@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "EV and Battery Charger",
-        "description": "Berechnet die benötigte Ladedauer, den geplanten Ladestart und das geplante Ladeende für ein E-Auto, Plug-in-Hybrid-Fahrzeug oder einen Batteriespeicher. Der aktuelle Akkustand und der optionale Kalender können direkt ausgewählt werden. Der Ziel-Ladestand wird als eigene Zahl-Entität der Integration bereitgestellt.",
+        "description": "Berechnet die benötigte Ladedauer, den geplanten Ladestart und das geplante Ladeende. Version 1.4.0 aktualisiert den ausgewählten Kalender alle 30 Minuten, setzt bei einem zukünftigen Termin den Ziel-Ladestand sofort auf 100 % und nach abgeschlossener Ladung wieder auf 80 %.",
         "data": {
           "name": "Bezeichnung",
           "soc_sensor": "Aktueller Ladestand",
@@ -24,7 +24,7 @@
         "data_description": {
           "name": "Beispiel: Cupra Leon oder Hausakku",
           "soc_sensor": "Wähle die Entität aus, die den aktuellen Ladestand in Prozent liefert, zum Beispiel sensor.garage_homeassistant_batterie.",
-          "target_soc": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
+          "target_soc": "Normaler Startwert der Entität „Ziel-Ladestand“. Bei einem zukünftigen Kalendertermin setzt Version 1.4.0 den Wert automatisch auf 100 % und nach abgeschlossener Ladung wieder auf 80 %.",
           "target_time": "Zu dieser Uhrzeit soll das Fahrzeug jeden Tag fertig geladen sein.",
           "target_source_priority": "„Kalendertermin zuerst“ verwendet immer den nächsten zukünftigen Kalendertermin. „Nacht-Uhrzeit bevorzugt“ nutzt normalerweise die tägliche Fertig-Uhrzeit, schaltet aber automatisch auf einen Kalendertermin um, wenn dieser früher liegt.",
           "battery_size_kwh": "Nutzbare Batteriekapazität in kWh.",
@@ -32,10 +32,10 @@
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
           "full_charge_extra_minutes": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur addiert wird, wenn der Ziel-Ladestand 100 % beträgt und noch geladen werden muss. Standard: 10 Minuten.",
-          "calendar_entity": "Optional: Wähle eine calendar.* Entität. Nur Termine mit einer Startzeit in der Zukunft werden berücksichtigt. Bei „Nacht-Uhrzeit bevorzugt“ überschreibt ein Termin die tägliche Uhrzeit nur, wenn er früher liegt.",
-          "ziel_ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
-          "Ziel-Ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
-          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur addiert wird, wenn der Ziel-Ladestand 100 % beträgt und noch geladen werden muss. Standard: 10 Minuten."
+          "calendar_entity": "Optional: Wähle eine calendar.* Entität. Die Integration aktualisiert genau diesen Kalender alle 30 Minuten über homeassistant.update_entity. Sobald ein zukünftiger Termin sichtbar ist, wird der Ziel-Ladestand automatisch auf 100 % gesetzt. Nach Abschluss der zugehörigen Ladung wird auf 80 % zurückgesetzt.",
+          "ziel_ladestand": "Normaler Startwert der Entität „Ziel-Ladestand“. Kalendertermine können den Wert vorübergehend automatisch auf 100 % setzen.",
+          "Ziel-Ladestand": "Normaler Startwert der Entität „Ziel-Ladestand“. Kalendertermine können den Wert vorübergehend automatisch auf 100 % setzen.",
+          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur bei 100 % Ziel-Ladestand addiert wird. Standard: 10 Minuten."
         }
       },
       "reconfigure": {
@@ -60,7 +60,7 @@
         "data_description": {
           "name": "Beispiel: Cupra Leon oder Hausakku",
           "soc_sensor": "Wähle die Entität aus, die den aktuellen Ladestand in Prozent liefert, zum Beispiel sensor.garage_homeassistant_batterie.",
-          "target_soc": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
+          "target_soc": "Normaler Startwert der Entität „Ziel-Ladestand“. Bei einem zukünftigen Kalendertermin setzt Version 1.4.0 den Wert automatisch auf 100 % und nach abgeschlossener Ladung wieder auf 80 %.",
           "target_time": "Zu dieser Uhrzeit soll das Fahrzeug jeden Tag fertig geladen sein.",
           "target_source_priority": "„Kalendertermin zuerst“ verwendet immer den nächsten zukünftigen Kalendertermin. „Nacht-Uhrzeit bevorzugt“ nutzt normalerweise die tägliche Fertig-Uhrzeit, schaltet aber automatisch auf einen Kalendertermin um, wenn dieser früher liegt.",
           "battery_size_kwh": "Nutzbare Batteriekapazität in kWh.",
@@ -68,10 +68,10 @@
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
           "full_charge_extra_minutes": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur addiert wird, wenn der Ziel-Ladestand 100 % beträgt und noch geladen werden muss. Standard: 10 Minuten.",
-          "calendar_entity": "Optional: Wähle eine calendar.* Entität. Nur Termine mit einer Startzeit in der Zukunft werden berücksichtigt. Bei „Nacht-Uhrzeit bevorzugt“ überschreibt ein Termin die tägliche Uhrzeit nur, wenn er früher liegt.",
-          "ziel_ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
-          "Ziel-Ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
-          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur addiert wird, wenn der Ziel-Ladestand 100 % beträgt und noch geladen werden muss. Standard: 10 Minuten."
+          "calendar_entity": "Optional: Wähle eine calendar.* Entität. Die Integration aktualisiert genau diesen Kalender alle 30 Minuten über homeassistant.update_entity. Sobald ein zukünftiger Termin sichtbar ist, wird der Ziel-Ladestand automatisch auf 100 % gesetzt. Nach Abschluss der zugehörigen Ladung wird auf 80 % zurückgesetzt.",
+          "ziel_ladestand": "Normaler Startwert der Entität „Ziel-Ladestand“. Kalendertermine können den Wert vorübergehend automatisch auf 100 % setzen.",
+          "Ziel-Ladestand": "Normaler Startwert der Entität „Ziel-Ladestand“. Kalendertermine können den Wert vorübergehend automatisch auf 100 % setzen.",
+          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur bei 100 % Ziel-Ladestand addiert wird. Standard: 10 Minuten."
         }
       }
     },
@@ -88,7 +88,7 @@
       "invalid_target_soc": "Der Ziel-Ladestand muss zwischen 0 und 100 % liegen."
     },
     "abort": {
-      "already_configured": "Diese Bezeichnung ist bereits eingerichtet.",
+      "already_configured": "Dieses Ladegerät ist bereits konfiguriert.",
       "unknown_entry": "Die bestehende Konfiguration wurde nicht gefunden.",
       "reconfigure_successful": "Die Konfiguration wurde aktualisiert."
     }
@@ -96,8 +96,8 @@
   "options": {
     "step": {
       "init": {
-        "title": "Optionen für EV and Battery Charger",
-        "description": "Passe die Entitäten, den optionalen Kalender, die Ladeziel-Logik und die Ladeparameter für den Ladeplan an.",
+        "title": "EV and Battery Charger Optionen",
+        "description": "Passe Entitäten, Kalender, Ladeziel-Logik und Ladeparameter an. Die Kalenderautomatik 100 % → 80 % bleibt aktiv, sobald ein Kalender ausgewählt ist.",
         "data": {
           "name": "Bezeichnung",
           "soc_sensor": "Aktueller Ladestand",
@@ -117,7 +117,7 @@
         "data_description": {
           "name": "Beispiel: Cupra Leon oder Hausakku",
           "soc_sensor": "Wähle die Entität aus, die den aktuellen Ladestand in Prozent liefert, zum Beispiel sensor.garage_homeassistant_batterie.",
-          "target_soc": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
+          "target_soc": "Normaler Startwert der Entität „Ziel-Ladestand“. Bei einem zukünftigen Kalendertermin setzt Version 1.4.0 den Wert automatisch auf 100 % und nach abgeschlossener Ladung wieder auf 80 %.",
           "target_time": "Zu dieser Uhrzeit soll das Fahrzeug jeden Tag fertig geladen sein.",
           "target_source_priority": "„Kalendertermin zuerst“ verwendet immer den nächsten zukünftigen Kalendertermin. „Nacht-Uhrzeit bevorzugt“ nutzt normalerweise die tägliche Fertig-Uhrzeit, schaltet aber automatisch auf einen Kalendertermin um, wenn dieser früher liegt.",
           "battery_size_kwh": "Nutzbare Batteriekapazität in kWh.",
@@ -125,10 +125,10 @@
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0,93 für 93 %.",
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
           "full_charge_extra_minutes": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur addiert wird, wenn der Ziel-Ladestand 100 % beträgt und noch geladen werden muss. Standard: 10 Minuten.",
-          "calendar_entity": "Optional: Wähle eine calendar.* Entität. Nur Termine mit einer Startzeit in der Zukunft werden berücksichtigt. Bei „Nacht-Uhrzeit bevorzugt“ überschreibt ein Termin die tägliche Uhrzeit nur, wenn er früher liegt.",
-          "ziel_ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
-          "Ziel-Ladestand": "Startwert für die neue Entität „Ziel-Ladestand“. Später kannst du den Zielwert direkt über diese Entität ändern.",
-          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur addiert wird, wenn der Ziel-Ladestand 100 % beträgt und noch geladen werden muss. Standard: 10 Minuten."
+          "calendar_entity": "Optional: Wähle eine calendar.* Entität. Die Integration aktualisiert genau diesen Kalender alle 30 Minuten über homeassistant.update_entity. Sobald ein zukünftiger Termin sichtbar ist, wird der Ziel-Ladestand automatisch auf 100 % gesetzt. Nach Abschluss der zugehörigen Ladung wird auf 80 % zurückgesetzt.",
+          "ziel_ladestand": "Normaler Startwert der Entität „Ziel-Ladestand“. Kalendertermine können den Wert vorübergehend automatisch auf 100 % setzen.",
+          "Ziel-Ladestand": "Normaler Startwert der Entität „Ziel-Ladestand“. Kalendertermine können den Wert vorübergehend automatisch auf 100 % setzen.",
+          "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur bei 100 % Ziel-Ladestand addiert wird. Standard: 10 Minuten."
         }
       }
     },

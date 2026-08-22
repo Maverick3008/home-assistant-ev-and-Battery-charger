@@ -1,8 +1,10 @@
 # EV and Battery Charger
 
-### Hinweis zu Version 1.3.0
+### Hinweis zu Version 1.4.0
 
-Bei der Ladeziel-Logik **Nacht-Uhrzeit bevorzugt (frühere Termine zuerst)** wird jetzt zusätzlich geprüft, ob der nächste zukünftige Kalendertermin **vor** der nächsten täglichen Fertig-Uhrzeit liegt. Ist das der Fall, wird automatisch der Kalendertermin als Ladeziel verwendet. Ein späterer Kalendertermin verschiebt die normale Nachtladung dagegen nicht. **Kalendertermin zuerst** arbeitet weiterhin wie bisher.
+Sobald der ausgewählte Kalender einen **zukünftigen Termin** bereitstellt, setzt die Integration den Ziel-Ladestand automatisch auf **100 %**. Nach Abschluss der zugehörigen Ladung wird der Ziel-Ladestand automatisch wieder auf **80 %** gesetzt. Derselbe Kalendertermin wird danach als erledigt behandelt und löst nicht erneut 100 % aus. Ein neu erkannter Termin aktiviert die 100-%-Automatik wieder.
+
+Zusätzlich aktualisiert die Integration die **ausgewählte Kalender-Entität alle 30 Minuten** über `homeassistant.update_entity`. Das ist besonders für **Remote Calendar** sinnvoll, da diese Home-Assistant-Integration standardmäßig nur alle 24 Stunden abruft.
 
 
 **EV and Battery Charger** ist eine Home-Assistant-Custom-Integration zur Berechnung der Ladedauer, des geplanten Ladestarts und des geplanten Ladeendes für ein E-Auto, Plug-in-Hybrid-Fahrzeug oder einen Batteriespeicher.
@@ -21,6 +23,9 @@ Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder op
 - Ein späterer Kalendertermin verschiebt die normale Nachtladung nicht
 - Fallback auf tägliche Fertig-Uhrzeit, wenn Kalender zuerst gewählt ist und kein Kalendertermin verfügbar ist
 - Eigene Zahl-Entität für den Ziel-Ladestand (`number.*`)
+- Zukünftiger Kalendertermin erkannt → Ziel-Ladestand automatisch `100 %`
+- Nach abgeschlossener kalenderbezogener Ladung → Ziel-Ladestand automatisch zurück auf `80 %`
+- Ausgewählte Kalender-Entität wird automatisch alle `30 Minuten` aktualisiert
 - Bei Ziel-Ladestand 100 % wird ein konfigurierbarer Sicherheitsaufschlag zur Ladedauer addiert
 - Aktueller Akkustand direkt im Config Flow auswählbar
 - Deutsche und englische Übersetzungen
@@ -55,6 +60,14 @@ Optional kann im Config Flow ein Kalender angegeben werden, zum Beispiel:
 ```text
 calendar.cupra_ladung
 ```
+
+### Automatischer Kalender-Abruf und Ziel-Ladestand
+
+Ab Version 1.4.0 wird **nur die in dieser Integration ausgewählte Kalender-Entität** automatisch alle 30 Minuten mit `homeassistant.update_entity` aktualisiert. Es werden nicht pauschal alle Kalender in Home Assistant abgefragt.
+
+Sobald diese Kalender-Entität einen zukünftigen Termin in ihren Attributen (`message`, `start_time`, `end_time`) bereitstellt, setzt die Integration die eigene Entität **Ziel-Ladestand** sofort auf **100 %**. Das gilt unabhängig davon, ob der Termin wegen der gewählten Ladeziel-Priorität tatsächlich der aktive `ready_by`-Zeitpunkt wird.
+
+Nach dem Ende des für diese Ladung gesperrten Ladefensters wird der Ziel-Ladestand auf **80 %** zurückgesetzt. Der Termin wird intern als erledigt markiert, solange er weiterhin als derselbe nächste Termin im Kalender erscheint. Erst ein neuer zukünftiger Termin löst erneut 100 % aus. Wird ein noch nicht abgearbeiteter Termin vorher entfernt, wird ebenfalls auf 80 % zurückgesetzt.
 
 Zusätzlich wählst du im Config Flow die Priorität:
 
@@ -178,15 +191,17 @@ actions:
 Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
 
 
-Version: 1.3.0
+Version: 1.4.0
 
 ---
 
 # EV and Battery Charger
 
-### Note for version 1.3.0
+### Note for version 1.4.0
 
-With **Prefer daily overnight time (earlier events first)**, the integration now also checks whether the next future calendar event occurs **before** the next daily ready time. If it does, the calendar event automatically becomes the active charging target. A later calendar event does not postpone the normal overnight charge. **Calendar event first** continues to work as before.
+As soon as the selected calendar exposes a **future event**, the integration automatically sets the target state of charge to **100%**. After the related charge cycle completes, the target is automatically reset to **80%**. The same event is then treated as completed so it cannot immediately trigger 100% again. A newly detected future event activates the 100% behavior again.
+
+The integration also refreshes the **selected calendar entity every 30 minutes** using `homeassistant.update_entity`. This is especially useful for Home Assistant's **Remote Calendar**, which normally polls every 24 hours.
 
 
 **EV and Battery Charger** is a Home Assistant custom integration that calculates charging duration, planned charging start and planned charging end for an electric vehicle, plug-in hybrid or battery storage system.
@@ -205,6 +220,9 @@ The integration can use a fixed daily ready-by time or optionally use the **next
 - A later calendar event does not postpone the normal overnight charge
 - Falls back to the daily ready-by time when calendar first is selected and no calendar event is available
 - Dedicated target state of charge number entity (`number.*`)
+- Future calendar event detected → target state of charge automatically set to `100%`
+- After the related charge cycle completes → target automatically reset to `80%`
+- Selected calendar entity is refreshed automatically every `30 minutes`
 - Adds a configurable safety extension when the target state of charge is 100%
 - Current state of charge through a sensor entity
 - German and English translations
@@ -239,6 +257,14 @@ Optionally, enter a calendar in the config flow, for example:
 ```text
 calendar.cupra_charging
 ```
+
+### Automatic calendar refresh and target SOC
+
+Starting with version 1.4.0, **only the calendar entity selected in this integration** is refreshed every 30 minutes through `homeassistant.update_entity`. The integration does not refresh every calendar in Home Assistant.
+
+As soon as this calendar entity exposes a future event through its `message`, `start_time`, and `end_time` attributes, the integration immediately sets its own **Target state of charge** entity to **100%**. This happens regardless of whether the event becomes the active `ready_by` source under the selected target priority.
+
+After the locked charge window for that charge cycle finishes, the target state of charge is reset to **80%**. The event is internally marked as completed while it remains the same next event in the calendar. Only a new future event can raise the target to 100% again. If an uncompleted event is removed beforehand, the target is also reset to 80%.
 
 In the config flow, also choose the priority:
 
@@ -362,4 +388,4 @@ actions:
 You can stop charging in the same way using the planned charge end sensor.
 
 
-Version: 1.3.0
+Version: 1.4.0

@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -104,6 +104,32 @@ class EVAndBatteryChargerTargetSocNumber(NumberEntity, RestoreEntity):
                 target_soc = legacy_soc
 
         await self.async_set_native_value(target_soc, write_state=False)
+
+        # Calendar automation changes the target SOC through the integration's
+        # shared runtime data. Keep the visible number entity in sync with those
+        # automatic 100% / 80% changes.
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self.entry.entry_id}_{SIGNAL_TARGET_SOC_UPDATED}",
+                self._async_runtime_target_soc_changed,
+            )
+        )
+
+    def _async_runtime_target_soc_changed(self) -> None:
+        """Synchronize the number entity with an automatic runtime SOC change."""
+        entry_data = self.hass.data.get(DOMAIN, {}).get(self.entry.entry_id, {})
+        if not isinstance(entry_data, dict) or "target_soc" not in entry_data:
+            return
+        try:
+            target_soc = float(entry_data["target_soc"])
+        except (TypeError, ValueError):
+            return
+
+        if self._attr_native_value == target_soc:
+            return
+        self._attr_native_value = target_soc
+        self.async_write_ha_state()
 
     async def async_set_native_value(self, value: float, write_state: bool = True) -> None:
         """Set the target SOC."""
