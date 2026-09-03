@@ -305,12 +305,14 @@ class EVAndBatteryChargerCalculator:
     def _sync_calendar_target_soc(
         self,
         event_signature: str | None,
-        event_is_tomorrow: bool,
+        event_can_activate_target: bool,
     ) -> None:
         """Apply the automatic calendar target SOC.
 
-        A new calendar event raises the target SOC to 100% only if its start
-        date is tomorrow in Home Assistant's local timezone.
+        A new calendar event may raise the target SOC to 100% only when the
+        event starts tomorrow and today's configured daily ready-by time has
+        already been reached. This prevents the normal charge for the current
+        morning from using the next day's 100% target too early.
 
         Once an event has activated the 100% target, it remains active for that
         same event after midnight until its associated charging cycle completes.
@@ -356,8 +358,9 @@ class EVAndBatteryChargerCalculator:
         if completed_event is not None and event_signature != completed_event:
             entry_data["calendar_completed_event"] = None
 
-        # Version 1.4.1: events two or more days away must not activate 100%.
-        if not event_is_tomorrow:
+        # Version 1.4.1: a new event may activate 100% only after today's
+        # normal daily ready-by time has passed and the event is tomorrow.
+        if not event_can_activate_target:
             return
 
         entry_data["calendar_target_event"] = event_signature
@@ -523,17 +526,30 @@ class EVAndBatteryChargerCalculator:
             calendar_entity, calendar_details
         )
 
-        # Version 1.4.1: only an event whose local start date is exactly
-        # tomorrow may newly activate the automatic 100% target. An event that
-        # already activated the target remains active across midnight.
+        # Version 1.4.1: a calendar event may newly activate the automatic
+        # 100% target only if it starts tomorrow AND today's normal daily
+        # ready-by time has already been reached.
+        #
+        # Example with a daily ready-by time of 05:00 and an event on Saturday:
+        # Friday 00:01-04:59 -> keep the normal target (for example 80%).
+        # Friday from 05:00   -> the Saturday event may activate 100%.
+        #
+        # Once activated, the same event remains at 100% across midnight until
+        # its associated charging cycle completes.
         tomorrow = now.date() + timedelta(days=1)
         calendar_event_is_tomorrow = (
             calendar_ready_by is not None
             and calendar_ready_by.date() == tomorrow
         )
+        today_daily_ready_by = datetime.combine(
+            now.date(), self._parse_time(target_time_value)
+        ).replace(tzinfo=now.tzinfo)
+        calendar_event_can_activate_target = (
+            calendar_event_is_tomorrow and now >= today_daily_ready_by
+        )
         self._sync_calendar_target_soc(
             calendar_event_signature,
-            calendar_event_is_tomorrow,
+            calendar_event_can_activate_target,
         )
 
         target_soc = self._get_target_soc()

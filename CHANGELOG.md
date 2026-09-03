@@ -2,12 +2,13 @@
 
 ## 1.4.1
 - Changed the automatic calendar target-SOC behavior introduced in 1.4.0.
-- The target state of charge is now raised automatically to **100% only when the selected calendar event starts tomorrow** in Home Assistant's local timezone.
-- Calendar events starting **two or more days in the future** no longer raise the target SOC prematurely.
-- Once a tomorrow-event has activated the 100% target, the target remains at 100% after midnight for the same event until the associated charging cycle has completed.
-- After the associated locked charging cycle completes, the target state of charge is still reset automatically to **80%**.
+- A calendar event may now raise the target state of charge to **100% only when it starts tomorrow AND today's configured daily ready-by time has already been reached**.
+- This prevents a tomorrow-event from changing the current morning's normal charging target too early; for example, with a daily ready-by time of `05:00`, an event tomorrow will not activate 100% at `00:01`, but may activate it from `05:00` onward.
+- Calendar events starting **two or more days in the future** still do not raise the target SOC prematurely.
+- Once an eligible tomorrow-event has activated the 100% target, the target remains at 100% after midnight for the same event until the associated charging cycle has completed.
+- After the associated locked charging cycle completes, the target state of charge is reset automatically to **80%**.
 - The selected calendar entity continues to be refreshed every **30 minutes** using `homeassistant.update_entity`.
-- Updated German and English documentation for version 1.4.1.
+- Updated German and English documentation for the refined version 1.4.1 behavior.
 
 ## 1.4.0
 - Automatically set the integration's target state of charge to **100%** as soon as the selected calendar exposes a future event.

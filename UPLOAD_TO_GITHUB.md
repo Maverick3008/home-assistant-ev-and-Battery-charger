@@ -15,7 +15,7 @@ Replace these files in the repository:
 Suggested Git commit message:
 
 ```text
-Release 1.4.1: only set calendar target SOC to 100% for tomorrow's event
+Release 1.4.1: delay tomorrow-event 100% target until today's daily ready time
 ```
 
 Suggested release tag:

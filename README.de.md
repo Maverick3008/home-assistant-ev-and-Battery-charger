@@ -2,7 +2,9 @@
 
 ### Hinweis zu Version 1.4.1
 
-Der automatische Ziel-Ladestand wird jetzt nur noch auf **100 %** gesetzt, wenn der vom ausgewählten Kalender bereitgestellte Termin **morgen** stattfindet. Ein Termin übermorgen oder später bleibt für die Ladeplanung sichtbar, löst die 100-%-Automatik aber noch nicht aus.
+Der automatische Ziel-Ladestand wird jetzt nur noch auf **100 %** gesetzt, wenn der vom ausgewählten Kalender bereitgestellte Termin **morgen** stattfindet **und die heutige konfigurierte tägliche Fertig-Uhrzeit bereits erreicht wurde**. Ein Termin übermorgen oder später bleibt für die Ladeplanung sichtbar, löst die 100-%-Automatik aber noch nicht aus.
+
+Dadurch bleibt zum Beispiel bei einer täglichen Fertig-Uhrzeit von `05:00` zwischen `00:00` und `04:59` weiterhin der normale Ziel-Ladestand (z. B. **80 %**) aktiv, selbst wenn morgen ein Termin ansteht. Erst ab `05:00` darf dieser morgige Termin automatisch auf **100 %** umschalten.
 
 Hat ein morgiger Termin die 100 % bereits aktiviert, bleibt dieser Ziel-Ladestand für denselben Termin auch **nach Mitternacht** aktiv, bis der zugehörige Ladezyklus abgeschlossen ist. Danach wird der Ziel-Ladestand wie bisher automatisch wieder auf **80 %** gesetzt.
 
@@ -24,7 +26,8 @@ Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder op
 - Ein späterer Kalendertermin verschiebt die normale Nachtladung nicht
 - Fallback auf tägliche Fertig-Uhrzeit, wenn Kalender zuerst gewählt ist und kein Kalendertermin verfügbar ist
 - Eigene Zahl-Entität für den Ziel-Ladestand (`number.*`)
-- **Kalendertermin morgen** erkannt → Ziel-Ladestand automatisch `100 %`
+- **Kalendertermin morgen** + heutige tägliche Fertig-Uhrzeit bereits erreicht → Ziel-Ladestand automatisch `100 %`
+- Kalendertermin morgen, aber heutige Fertig-Uhrzeit noch nicht erreicht → normaler Ziel-Ladestand bleibt bestehen
 - Kalendertermin **übermorgen oder später** → noch keine automatische Änderung auf `100 %`
 - Ein bereits aktivierter Termin behält `100 %` auch nach Mitternacht bis zum Abschluss des Ladezyklus
 - Nach abgeschlossener kalenderbezogener Ladung → Ziel-Ladestand automatisch zurück auf `80 %`
@@ -70,16 +73,19 @@ Nur die in dieser Integration ausgewählte Kalender-Entität wird automatisch al
 
 Ab Version **1.4.1** gilt für die automatische 100-%-Umschaltung:
 
-- Termin ist **morgen** → Ziel-Ladestand wird automatisch auf **100 %** gesetzt.
+- Termin ist **morgen**, aber die heutige tägliche Fertig-Uhrzeit ist **noch nicht erreicht** → Ziel-Ladestand bleibt unverändert.
+- Termin ist **morgen** und die heutige tägliche Fertig-Uhrzeit ist **erreicht oder überschritten** → Ziel-Ladestand wird automatisch auf **100 %** gesetzt.
 - Termin ist **übermorgen oder später** → Ziel-Ladestand bleibt unverändert.
 - Ein Termin, der bereits 100 % aktiviert hat, behält diesen Zielwert nach Mitternacht für denselben Termin bei.
 - Nach dem Ende des zugehörigen gesperrten Ladefensters wird der Ziel-Ladestand auf **80 %** zurückgesetzt.
 - Derselbe bereits abgearbeitete Termin kann nicht unmittelbar erneut 100 % auslösen.
 - Wird ein noch nicht abgearbeiteter aktiver Termin entfernt, wird ebenfalls auf 80 % zurückgesetzt.
 
-Beispiel: Ist heute der **3. September**, löst ein Termin am **4. September** die 100-%-Automatik aus. Ein Termin am **5. September** löst sie am 3. September noch nicht aus; erst am 4. September ist dieser Termin „morgen“ und darf auf 100 % umschalten.
+**Beispiel:** Die tägliche Fertig-Uhrzeit ist `05:00` und der nächste Kalendertermin ist am Samstag. Am Freitag um `00:01` bleibt der normale Ziel-Ladestand (z. B. 80 %) aktiv. Erst ab Freitag `05:00` darf der Termin für Samstag den Ziel-Ladestand auf 100 % setzen. Damit wird die normale Ladung für Freitagmorgen nicht versehentlich schon auf 100 % ausgelegt.
 
-Diese 100-%-Logik ist unabhängig davon, ob der Termin aufgrund der gewählten Ladeziel-Priorität tatsächlich der aktive `ready_by`-Zeitpunkt wird.
+Ein Termin am Sonntag oder später löst am Freitag weiterhin keine 100-%-Umschaltung aus.
+
+Diese 100-%-Logik ist unabhängig davon, ob der Termin aufgrund der gewählten Ladeziel-Priorität tatsächlich der aktive `ready_by`-Zeitpunkt wird. Die konfigurierte tägliche Fertig-Uhrzeit dient dabei als Übergabepunkt zur 100-%-Planung für den Folgetag.
 
 Zusätzlich wählst du im Config Flow die Priorität:
 

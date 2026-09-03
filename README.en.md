@@ -2,7 +2,9 @@
 
 ### Note for version 1.4.1
 
-The automatic target state of charge is now raised to **100% only when the selected calendar event starts tomorrow**. An event two or more days away remains available to the charging planner but does not trigger the 100% automation yet.
+The automatic target state of charge is now raised to **100% only when the selected calendar event starts tomorrow and today's configured daily ready-by time has already been reached**. An event two or more days away remains available to the charging planner but does not trigger the 100% automation yet.
+
+For example, with a daily ready-by time of `05:00`, the normal target SOC (for example **80%**) remains active from `00:00` through `04:59` even when an event is scheduled for tomorrow. That tomorrow-event may raise the target to **100%** only from `05:00` onward.
 
 Once a tomorrow-event has activated 100%, that target remains active for the same event **after midnight** until its associated charging cycle has completed. The target is then automatically reset to **80%**, as before.
 
@@ -24,7 +26,8 @@ The integration can use a fixed daily ready-by time or optionally use the **next
 - A later calendar event does not postpone the normal overnight charge
 - Falls back to the daily ready-by time when calendar first is selected and no calendar event is available
 - Dedicated target state of charge number entity (`number.*`)
-- **Calendar event tomorrow** detected → target SOC automatically set to `100%`
+- **Calendar event tomorrow** + today's daily ready-by time already reached → target SOC automatically set to `100%`
+- Calendar event tomorrow, but today's ready-by time has not been reached yet → normal target SOC remains active
 - Calendar event **two or more days away** → no automatic 100% change yet
 - An already activated event keeps `100%` after midnight until the related charge cycle completes
 - After the related charge cycle completes → target automatically reset to `80%`
@@ -70,16 +73,19 @@ Only the calendar entity selected in this integration is refreshed every 30 minu
 
 Starting with version **1.4.1**, the automatic 100% behavior is:
 
-- Event starts **tomorrow** → target SOC is automatically raised to **100%**.
+- Event starts **tomorrow**, but today's daily ready-by time has **not been reached yet** → target SOC remains unchanged.
+- Event starts **tomorrow** and today's daily ready-by time has **been reached or passed** → target SOC is automatically raised to **100%**.
 - Event starts **two or more days from now** → target SOC remains unchanged.
 - Once an event has activated 100%, the same event keeps that target after midnight.
 - After the associated locked charging window finishes, the target SOC is reset to **80%**.
 - The same completed event cannot immediately trigger 100% again.
 - If an active, uncompleted event is removed, the target is also reset to 80%.
 
-Example: if today is **September 3**, an event on **September 4** activates 100%. An event on **September 5** does not activate it on September 3; on September 4 that event becomes "tomorrow" and may then raise the target to 100%.
+**Example:** The daily ready-by time is `05:00` and the next calendar event is on Saturday. At `00:01` on Friday, the normal target SOC (for example 80%) remains active. Only from `05:00` on Friday may the Saturday event raise the target SOC to 100%. This prevents the normal Friday-morning charge from being planned to 100% one night too early.
 
-This automatic 100% behavior is independent of whether the calendar event becomes the active `ready_by` source under the selected target priority.
+An event on Sunday or later still does not trigger 100% on Friday.
+
+This automatic 100% behavior is independent of whether the calendar event becomes the active `ready_by` source under the selected target priority. The configured daily ready-by time acts as the handover point for the next day's 100% planning.
 
 In the config flow, choose the priority:
 

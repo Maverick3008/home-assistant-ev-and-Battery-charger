@@ -2,7 +2,9 @@
 
 ### Hinweis zu Version 1.4.1
 
-Der automatische Ziel-Ladestand wird jetzt nur noch auf **100 %** gesetzt, wenn der vom ausgewählten Kalender bereitgestellte Termin **morgen** stattfindet. Ein Termin übermorgen oder später bleibt für die Ladeplanung sichtbar, löst die 100-%-Automatik aber noch nicht aus.
+Der automatische Ziel-Ladestand wird jetzt nur noch auf **100 %** gesetzt, wenn der vom ausgewählten Kalender bereitgestellte Termin **morgen** stattfindet **und die heutige konfigurierte tägliche Fertig-Uhrzeit bereits erreicht wurde**. Ein Termin übermorgen oder später bleibt für die Ladeplanung sichtbar, löst die 100-%-Automatik aber noch nicht aus.
+
+Dadurch bleibt zum Beispiel bei einer täglichen Fertig-Uhrzeit von `05:00` zwischen `00:00` und `04:59` weiterhin der normale Ziel-Ladestand (z. B. **80 %**) aktiv, selbst wenn morgen ein Termin ansteht. Erst ab `05:00` darf dieser morgige Termin automatisch auf **100 %** umschalten.
 
 Hat ein morgiger Termin die 100 % bereits aktiviert, bleibt dieser Ziel-Ladestand für denselben Termin auch **nach Mitternacht** aktiv, bis der zugehörige Ladezyklus abgeschlossen ist. Danach wird der Ziel-Ladestand wie bisher automatisch wieder auf **80 %** gesetzt.
 
@@ -24,7 +26,8 @@ Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder op
 - Ein späterer Kalendertermin verschiebt die normale Nachtladung nicht
 - Fallback auf tägliche Fertig-Uhrzeit, wenn Kalender zuerst gewählt ist und kein Kalendertermin verfügbar ist
 - Eigene Zahl-Entität für den Ziel-Ladestand (`number.*`)
-- **Kalendertermin morgen** erkannt → Ziel-Ladestand automatisch `100 %`
+- **Kalendertermin morgen** + heutige tägliche Fertig-Uhrzeit bereits erreicht → Ziel-Ladestand automatisch `100 %`
+- Kalendertermin morgen, aber heutige Fertig-Uhrzeit noch nicht erreicht → normaler Ziel-Ladestand bleibt bestehen
 - Kalendertermin **übermorgen oder später** → noch keine automatische Änderung auf `100 %`
 - Ein bereits aktivierter Termin behält `100 %` auch nach Mitternacht bis zum Abschluss des Ladezyklus
 - Nach abgeschlossener kalenderbezogener Ladung → Ziel-Ladestand automatisch zurück auf `80 %`
@@ -70,16 +73,19 @@ Nur die in dieser Integration ausgewählte Kalender-Entität wird automatisch al
 
 Ab Version **1.4.1** gilt für die automatische 100-%-Umschaltung:
 
-- Termin ist **morgen** → Ziel-Ladestand wird automatisch auf **100 %** gesetzt.
+- Termin ist **morgen**, aber die heutige tägliche Fertig-Uhrzeit ist **noch nicht erreicht** → Ziel-Ladestand bleibt unverändert.
+- Termin ist **morgen** und die heutige tägliche Fertig-Uhrzeit ist **erreicht oder überschritten** → Ziel-Ladestand wird automatisch auf **100 %** gesetzt.
 - Termin ist **übermorgen oder später** → Ziel-Ladestand bleibt unverändert.
 - Ein Termin, der bereits 100 % aktiviert hat, behält diesen Zielwert nach Mitternacht für denselben Termin bei.
 - Nach dem Ende des zugehörigen gesperrten Ladefensters wird der Ziel-Ladestand auf **80 %** zurückgesetzt.
 - Derselbe bereits abgearbeitete Termin kann nicht unmittelbar erneut 100 % auslösen.
 - Wird ein noch nicht abgearbeiteter aktiver Termin entfernt, wird ebenfalls auf 80 % zurückgesetzt.
 
-Beispiel: Ist heute der **3. September**, löst ein Termin am **4. September** die 100-%-Automatik aus. Ein Termin am **5. September** löst sie am 3. September noch nicht aus; erst am 4. September ist dieser Termin „morgen“ und darf auf 100 % umschalten.
+**Beispiel:** Die tägliche Fertig-Uhrzeit ist `05:00` und der nächste Kalendertermin ist am Samstag. Am Freitag um `00:01` bleibt der normale Ziel-Ladestand (z. B. 80 %) aktiv. Erst ab Freitag `05:00` darf der Termin für Samstag den Ziel-Ladestand auf 100 % setzen. Damit wird die normale Ladung für Freitagmorgen nicht versehentlich schon auf 100 % ausgelegt.
 
-Diese 100-%-Logik ist unabhängig davon, ob der Termin aufgrund der gewählten Ladeziel-Priorität tatsächlich der aktive `ready_by`-Zeitpunkt wird.
+Ein Termin am Sonntag oder später löst am Freitag weiterhin keine 100-%-Umschaltung aus.
+
+Diese 100-%-Logik ist unabhängig davon, ob der Termin aufgrund der gewählten Ladeziel-Priorität tatsächlich der aktive `ready_by`-Zeitpunkt wird. Die konfigurierte tägliche Fertig-Uhrzeit dient dabei als Übergabepunkt zur 100-%-Planung für den Folgetag.
 
 Zusätzlich wählst du im Config Flow die Priorität:
 
@@ -193,14 +199,15 @@ Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
 
 Version: 1.4.1
 
-
 ---
 
 # EV and Battery Charger
 
 ### Note for version 1.4.1
 
-The automatic target state of charge is now raised to **100% only when the selected calendar event starts tomorrow**. An event two or more days away remains available to the charging planner but does not trigger the 100% automation yet.
+The automatic target state of charge is now raised to **100% only when the selected calendar event starts tomorrow and today's configured daily ready-by time has already been reached**. An event two or more days away remains available to the charging planner but does not trigger the 100% automation yet.
+
+For example, with a daily ready-by time of `05:00`, the normal target SOC (for example **80%**) remains active from `00:00` through `04:59` even when an event is scheduled for tomorrow. That tomorrow-event may raise the target to **100%** only from `05:00` onward.
 
 Once a tomorrow-event has activated 100%, that target remains active for the same event **after midnight** until its associated charging cycle has completed. The target is then automatically reset to **80%**, as before.
 
@@ -222,7 +229,8 @@ The integration can use a fixed daily ready-by time or optionally use the **next
 - A later calendar event does not postpone the normal overnight charge
 - Falls back to the daily ready-by time when calendar first is selected and no calendar event is available
 - Dedicated target state of charge number entity (`number.*`)
-- **Calendar event tomorrow** detected → target SOC automatically set to `100%`
+- **Calendar event tomorrow** + today's daily ready-by time already reached → target SOC automatically set to `100%`
+- Calendar event tomorrow, but today's ready-by time has not been reached yet → normal target SOC remains active
 - Calendar event **two or more days away** → no automatic 100% change yet
 - An already activated event keeps `100%` after midnight until the related charge cycle completes
 - After the related charge cycle completes → target automatically reset to `80%`
@@ -268,16 +276,19 @@ Only the calendar entity selected in this integration is refreshed every 30 minu
 
 Starting with version **1.4.1**, the automatic 100% behavior is:
 
-- Event starts **tomorrow** → target SOC is automatically raised to **100%**.
+- Event starts **tomorrow**, but today's daily ready-by time has **not been reached yet** → target SOC remains unchanged.
+- Event starts **tomorrow** and today's daily ready-by time has **been reached or passed** → target SOC is automatically raised to **100%**.
 - Event starts **two or more days from now** → target SOC remains unchanged.
 - Once an event has activated 100%, the same event keeps that target after midnight.
 - After the associated locked charging window finishes, the target SOC is reset to **80%**.
 - The same completed event cannot immediately trigger 100% again.
 - If an active, uncompleted event is removed, the target is also reset to 80%.
 
-Example: if today is **September 3**, an event on **September 4** activates 100%. An event on **September 5** does not activate it on September 3; on September 4 that event becomes "tomorrow" and may then raise the target to 100%.
+**Example:** The daily ready-by time is `05:00` and the next calendar event is on Saturday. At `00:01` on Friday, the normal target SOC (for example 80%) remains active. Only from `05:00` on Friday may the Saturday event raise the target SOC to 100%. This prevents the normal Friday-morning charge from being planned to 100% one night too early.
 
-This automatic 100% behavior is independent of whether the calendar event becomes the active `ready_by` source under the selected target priority.
+An event on Sunday or later still does not trigger 100% on Friday.
+
+This automatic 100% behavior is independent of whether the calendar event becomes the active `ready_by` source under the selected target priority. The configured daily ready-by time acts as the handover point for the next day's 100% planning.
 
 In the config flow, choose the priority:
 
