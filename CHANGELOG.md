@@ -1,7 +1,15 @@
 # Changelog
 
-## 1.4.0
+## 1.4.1
+- Changed the automatic calendar target-SOC behavior introduced in 1.4.0.
+- The target state of charge is now raised automatically to **100% only when the selected calendar event starts tomorrow** in Home Assistant's local timezone.
+- Calendar events starting **two or more days in the future** no longer raise the target SOC prematurely.
+- Once a tomorrow-event has activated the 100% target, the target remains at 100% after midnight for the same event until the associated charging cycle has completed.
+- After the associated locked charging cycle completes, the target state of charge is still reset automatically to **80%**.
+- The selected calendar entity continues to be refreshed every **30 minutes** using `homeassistant.update_entity`.
+- Updated German and English documentation for version 1.4.1.
 
+## 1.4.0
 - Automatically set the integration's target state of charge to **100%** as soon as the selected calendar exposes a future event.
 - Automatically reset the target state of charge to **80%** after the associated locked charge cycle has completed.
 - Track completed calendar events so the same still-visible event cannot immediately switch the target back to 100%.
@@ -12,7 +20,6 @@
 - Updated English/German documentation and translations for version 1.4.0.
 
 ## 1.3.0
-
 - Changed `daily_time_first` behavior so the daily overnight target remains the default, but an earlier future calendar event automatically becomes the active ready-by target.
 - Calendar events later than the next daily ready time no longer affect the preferred overnight charging plan.
 - Kept the internal `daily_time_first` value for backward compatibility with existing config entries.
@@ -69,7 +76,6 @@
 - Added `charging_window_locked` as a diagnostic attribute.
 
 ## 1.0.8
-
 - Improved German and English labels for the target source priority selector.
 - Added translated dropdown labels: Calendar event first / Daily overnight time first.
 - Reworked the reconfigure flow to use Home Assistant's safe update-and-reload helper.

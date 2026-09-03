@@ -1,15 +1,16 @@
 # EV and Battery Charger
 
-### Note for version 1.4.0
+### Note for version 1.4.1
 
-As soon as the selected calendar exposes a **future event**, the integration automatically sets the target state of charge to **100%**. After the related charge cycle completes, the target is automatically reset to **80%**. The same event is then treated as completed so it cannot immediately trigger 100% again. A newly detected future event activates the 100% behavior again.
+The automatic target state of charge is now raised to **100% only when the selected calendar event starts tomorrow**. An event two or more days away remains available to the charging planner but does not trigger the 100% automation yet.
 
-The integration also refreshes the **selected calendar entity every 30 minutes** using `homeassistant.update_entity`. This is especially useful for Home Assistant's **Remote Calendar**, which normally polls every 24 hours.
+Once a tomorrow-event has activated 100%, that target remains active for the same event **after midnight** until its associated charging cycle has completed. The target is then automatically reset to **80%**, as before.
 
+The **selected calendar entity is still refreshed every 30 minutes** using `homeassistant.update_entity`. This is particularly useful with Home Assistant's **Remote Calendar** integration.
 
 **EV and Battery Charger** is a Home Assistant custom integration that calculates charging duration, planned charging start and planned charging end for an electric vehicle, plug-in hybrid or battery storage system.
 
-The integration can use a fixed daily ready-by time or optionally use the **next event from a Home Assistant calendar**. The config flow lets you choose either **Calendar event first** or **Prefer daily overnight time**, where an earlier calendar event automatically takes precedence. The planned charging end is still placed before the selected ready-by time by the configured buffer, for example 30 minutes.
+The integration can use a fixed daily ready-by time or optionally use the **next event from a Home Assistant calendar**. The config flow lets you choose either **Calendar event first** or **Prefer daily overnight time**, where an earlier calendar event automatically takes precedence. The planned charging end is placed before the selected ready-by time by the configured buffer, for example 30 minutes.
 
 ## Features
 
@@ -23,7 +24,9 @@ The integration can use a fixed daily ready-by time or optionally use the **next
 - A later calendar event does not postpone the normal overnight charge
 - Falls back to the daily ready-by time when calendar first is selected and no calendar event is available
 - Dedicated target state of charge number entity (`number.*`)
-- Future calendar event detected → target state of charge automatically set to `100%`
+- **Calendar event tomorrow** detected → target SOC automatically set to `100%`
+- Calendar event **two or more days away** → no automatic 100% change yet
+- An already activated event keeps `100%` after midnight until the related charge cycle completes
 - After the related charge cycle completes → target automatically reset to `80%`
 - Selected calendar entity is refreshed automatically every `30 minutes`
 - Adds a configurable safety extension when the target state of charge is 100%
@@ -63,13 +66,22 @@ calendar.cupra_charging
 
 ### Automatic calendar refresh and target SOC
 
-Starting with version 1.4.0, **only the calendar entity selected in this integration** is refreshed every 30 minutes through `homeassistant.update_entity`. The integration does not refresh every calendar in Home Assistant.
+Only the calendar entity selected in this integration is refreshed every 30 minutes through `homeassistant.update_entity`. The integration does not refresh every calendar in Home Assistant.
 
-As soon as this calendar entity exposes a future event through its `message`, `start_time`, and `end_time` attributes, the integration immediately sets its own **Target state of charge** entity to **100%**. This happens regardless of whether the event becomes the active `ready_by` source under the selected target priority.
+Starting with version **1.4.1**, the automatic 100% behavior is:
 
-After the locked charge window for that charge cycle finishes, the target state of charge is reset to **80%**. The event is internally marked as completed while it remains the same next event in the calendar. Only a new future event can raise the target to 100% again. If an uncompleted event is removed beforehand, the target is also reset to 80%.
+- Event starts **tomorrow** → target SOC is automatically raised to **100%**.
+- Event starts **two or more days from now** → target SOC remains unchanged.
+- Once an event has activated 100%, the same event keeps that target after midnight.
+- After the associated locked charging window finishes, the target SOC is reset to **80%**.
+- The same completed event cannot immediately trigger 100% again.
+- If an active, uncompleted event is removed, the target is also reset to 80%.
 
-In the config flow, also choose the priority:
+Example: if today is **September 3**, an event on **September 4** activates 100%. An event on **September 5** does not activate it on September 3; on September 4 that event becomes "tomorrow" and may then raise the target to 100%.
+
+This automatic 100% behavior is independent of whether the calendar event becomes the active `ready_by` source under the selected target priority.
+
+In the config flow, choose the priority:
 
 ```text
 Calendar event first
@@ -99,16 +111,6 @@ Planned charge end: Tomorrow 07:30
 Planned charge start: Tomorrow 06:00
 ```
 
-Example with `Prefer daily overnight time (earlier events first)`:
-
-- Current time: `12:30`
-- Next calendar event: `13:30`
-- Next daily ready time: `Tomorrow 06:00`
-
-Result: the `13:30` calendar event becomes the active charging target because it occurs before the next overnight target. If the event were after `Tomorrow 06:00`, the daily ready time would remain active.
-
-If `Calendar event first` is selected and no calendar is configured, no `start_time` is available, or the event has already started, the integration uses the daily ready-by time.
-
 With `Prefer daily overnight time (earlier events first)`:
 
 - Calendar event **before** the next overnight target → the calendar event becomes the charging target.
@@ -136,12 +138,11 @@ A number entity is also created:
 
 | Entity | Meaning |
 |---|---|
-| Target state of charge | Target SOC in percent that you can change directly in Home Assistant later |
-
+| Target state of charge | Target SOC in percent that you can change directly in Home Assistant |
 
 ### 100% full-charge safety extension
 
-If the target state of charge is set to **100%** and charging is actually required, the integration adds the safety extension configured in the config flow to the calculated charging duration. The setting is called **Extra charging time at 100% target state of charge**. Default: **10 minutes**. This moves the planned start earlier or keeps the charging window active longer to help ensure the vehicle is really full.
+If the target state of charge is set to **100%** and charging is actually required, the integration adds the safety extension configured in the config flow to the calculated charging duration. The default is **10 minutes**.
 
 ### Fixed charging duration during an active charging window
 
@@ -164,7 +165,7 @@ locked_charge_finished_at
 3. Go to **Settings → Devices & services → Add integration**.
 4. Search for **EV and Battery Charger**.
 5. Select the current state of charge entity, optionally select a calendar, and enter your charging parameters.
-6. Afterwards, change the target SOC through the new **Target state of charge** number entity.
+6. Afterwards, change the target SOC through the **Target state of charge** number entity.
 
 ## Example charging automation
 
@@ -190,5 +191,4 @@ actions:
 
 You can stop charging in the same way using the planned charge end sensor.
 
-
-Version: 1.4.0
+Version: 1.4.1
