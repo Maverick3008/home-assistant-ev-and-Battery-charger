@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "EV and Battery Charger",
-        "description": "Calculates charging duration, planned charging start and end. Version 1.5.0 supports multiple calendars and uses the earliest future event across them.",
+        "description": "Calculates charging duration, planned charging start and end. Version 1.5.1 supports multiple calendars and activates a fallback charging window after 03:00 when a future event still exists today but the normal charging plan reports “Not needed”.",
         "data": {
           "name": "Name",
           "soc_sensor": "Current state of charge",
@@ -32,7 +32,7 @@
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
           "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
           "full_charge_extra_minutes": "Additional safety extension in minutes added only at a 100% target. Default: 10 minutes.",
-          "calendar_entity": "Optional: select one or more calendar.* entities. All selected calendars are refreshed every 30 minutes using homeassistant.update_entity. The earliest future event across all selected calendars is used for the charging plan. If events start at the same time, selection order wins.",
+          "calendar_entity": "Optional: select one or more calendar.* entities. All selected calendars are refreshed every 30 minutes. The earliest future event is used for the normal charging plan. After 03:00 an additional fallback applies: if a future event still exists today and the normal plan reports “Not needed”, a charging window from 03:00 until the event is activated regardless of SOC.",
           "ziel_ladestand": "Normal starting value of the target SOC entity. An eligible calendar event may temporarily raise it to 100% automatically.",
           "Ziel-Ladestand": "Normal starting value of the target SOC entity. An eligible calendar event may temporarily raise it to 100% automatically.",
           "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes added only at a 100% target. Default: 10 minutes."
@@ -68,7 +68,7 @@
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
           "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
           "full_charge_extra_minutes": "Additional safety extension in minutes added only at a 100% target. Default: 10 minutes.",
-          "calendar_entity": "Optional: select one or more calendar.* entities. All selected calendars are refreshed every 30 minutes using homeassistant.update_entity. The earliest future event across all selected calendars is used for the charging plan. If events start at the same time, selection order wins.",
+          "calendar_entity": "Optional: select one or more calendar.* entities. All selected calendars are refreshed every 30 minutes. The earliest future event is used for the normal charging plan. After 03:00 an additional fallback applies: if a future event still exists today and the normal plan reports “Not needed”, a charging window from 03:00 until the event is activated regardless of SOC.",
           "ziel_ladestand": "Normal starting value of the target SOC entity. An eligible calendar event may temporarily raise it to 100% automatically.",
           "Ziel-Ladestand": "Normal starting value of the target SOC entity. An eligible calendar event may temporarily raise it to 100% automatically.",
           "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes added only at a 100% target. Default: 10 minutes."
@@ -97,7 +97,7 @@
     "step": {
       "init": {
         "title": "EV and Battery Charger options",
-        "description": "Adjust entities, calendars, charging target logic, and charging parameters. Multiple calendars can be selected; the earliest future event is used.",
+        "description": "Adjust entities, calendars, charging target logic, and charging parameters. Multiple calendars are supported. In addition, after 03:00 a simple calendar fallback applies: if a future event still exists today and the normal plan is “Not needed”, the status is changed to “Charging window” until the event starts.",
         "data": {
           "name": "Name",
           "soc_sensor": "Current state of charge",
@@ -125,7 +125,7 @@
           "efficiency": "Charging efficiency as a factor, for example 0.93 for 93%.",
           "buffer_minutes": "The planned charging end is this many minutes before the ready time. Default: 30 minutes.",
           "full_charge_extra_minutes": "Additional safety extension in minutes added only at a 100% target. Default: 10 minutes.",
-          "calendar_entity": "Optional: select one or more calendar.* entities. All selected calendars are refreshed every 30 minutes using homeassistant.update_entity. The earliest future event across all selected calendars is used for the charging plan. If events start at the same time, selection order wins.",
+          "calendar_entity": "Optional: select one or more calendar.* entities. All selected calendars are refreshed every 30 minutes. The earliest future event is used for the normal charging plan. After 03:00 an additional fallback applies: if a future event still exists today and the normal plan reports “Not needed”, a charging window from 03:00 until the event is activated regardless of SOC.",
           "ziel_ladestand": "Normal starting value of the target SOC entity. An eligible calendar event may temporarily raise it to 100% automatically.",
           "Ziel-Ladestand": "Normal starting value of the target SOC entity. An eligible calendar event may temporarily raise it to 100% automatically.",
           "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Additional safety extension in minutes added only at a 100% target. Default: 10 minutes."

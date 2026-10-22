@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "EV and Battery Charger",
-        "description": "Berechnet Ladedauer, Ladestart und Ladeende. Version 1.5.0 unterstützt mehrere Kalender und verwendet daraus den frühesten zukünftigen Termin.",
+        "description": "Berechnet Ladedauer, Ladestart und Ladeende. Version 1.5.1 unterstützt mehrere Kalender und startet ab 03:00 Uhr ein Fallback-Ladefenster, wenn heute noch ein zukünftiger Kalendertermin vorhanden ist und der normale Ladeplan „Nicht nötig“ ergibt.",
         "data": {
           "name": "Bezeichnung",
           "soc_sensor": "Aktueller Ladestand",
@@ -32,7 +32,7 @@
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0.93 für 93 %.",
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
           "full_charge_extra_minutes": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur bei 100 % Ziel-Ladestand addiert wird. Standard: 10 Minuten.",
-          "calendar_entity": "Optional: Wähle einen oder mehrere calendar.* Kalender. Alle ausgewählten Kalender werden alle 30 Minuten über homeassistant.update_entity aktualisiert. Für den Ladeplan wird der zeitlich früheste zukünftige Termin aus allen ausgewählten Kalendern verwendet. Bei gleichem Startzeitpunkt entscheidet die Reihenfolge der Auswahl.",
+          "calendar_entity": "Optional: Wähle einen oder mehrere calendar.* Kalender. Alle ausgewählten Kalender werden alle 30 Minuten aktualisiert. Für den normalen Ladeplan wird der früheste zukünftige Termin verwendet. Ab 03:00 Uhr greift zusätzlich der Fallback: Gibt es heute noch einen zukünftigen Termin und der normale Ladeplan ergibt „Nicht nötig“, wird unabhängig vom SOC ein Ladefenster von 03:00 Uhr bis zum Termin aktiviert.",
           "ziel_ladestand": "Normaler Startwert der Entität „Ziel-Ladestand“. Ein geeigneter Kalendertermin kann den Wert vorübergehend automatisch auf 100 % setzen.",
           "Ziel-Ladestand": "Normaler Startwert der Entität „Ziel-Ladestand“. Ein geeigneter Kalendertermin kann den Wert vorübergehend automatisch auf 100 % setzen.",
           "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur bei 100 % Ziel-Ladestand addiert wird. Standard: 10 Minuten."
@@ -68,7 +68,7 @@
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0.93 für 93 %.",
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
           "full_charge_extra_minutes": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur bei 100 % Ziel-Ladestand addiert wird. Standard: 10 Minuten.",
-          "calendar_entity": "Optional: Wähle einen oder mehrere calendar.* Kalender. Alle ausgewählten Kalender werden alle 30 Minuten über homeassistant.update_entity aktualisiert. Für den Ladeplan wird der zeitlich früheste zukünftige Termin aus allen ausgewählten Kalendern verwendet. Bei gleichem Startzeitpunkt entscheidet die Reihenfolge der Auswahl.",
+          "calendar_entity": "Optional: Wähle einen oder mehrere calendar.* Kalender. Alle ausgewählten Kalender werden alle 30 Minuten aktualisiert. Für den normalen Ladeplan wird der früheste zukünftige Termin verwendet. Ab 03:00 Uhr greift zusätzlich der Fallback: Gibt es heute noch einen zukünftigen Termin und der normale Ladeplan ergibt „Nicht nötig“, wird unabhängig vom SOC ein Ladefenster von 03:00 Uhr bis zum Termin aktiviert.",
           "ziel_ladestand": "Normaler Startwert der Entität „Ziel-Ladestand“. Ein geeigneter Kalendertermin kann den Wert vorübergehend automatisch auf 100 % setzen.",
           "Ziel-Ladestand": "Normaler Startwert der Entität „Ziel-Ladestand“. Ein geeigneter Kalendertermin kann den Wert vorübergehend automatisch auf 100 % setzen.",
           "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur bei 100 % Ziel-Ladestand addiert wird. Standard: 10 Minuten."
@@ -97,7 +97,7 @@
     "step": {
       "init": {
         "title": "EV and Battery Charger Optionen",
-        "description": "Passe Entitäten, Kalender, Ladeziel-Logik und Ladeparameter an. Es können mehrere Kalender ausgewählt werden; der früheste zukünftige Termin wird verwendet.",
+        "description": "Passe Entitäten, Kalender, Ladeziel-Logik und Ladeparameter an. Mehrere Kalender werden unterstützt. Zusätzlich gilt ab 03:00 Uhr der einfache Kalender-Fallback: Ist heute noch ein zukünftiger Termin vorhanden und der normale Ladeplan steht auf „Nicht nötig“, wird der Status bis zum Termin auf „Ladefenster“ gesetzt.",
         "data": {
           "name": "Bezeichnung",
           "soc_sensor": "Aktueller Ladestand",
@@ -125,7 +125,7 @@
           "efficiency": "Ladeeffizienz als Faktor, zum Beispiel 0.93 für 93 %.",
           "buffer_minutes": "Das geplante Ladeende liegt so viele Minuten vor der Fertig-Uhrzeit. Standard: 30 Minuten.",
           "full_charge_extra_minutes": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur bei 100 % Ziel-Ladestand addiert wird. Standard: 10 Minuten.",
-          "calendar_entity": "Optional: Wähle einen oder mehrere calendar.* Kalender. Alle ausgewählten Kalender werden alle 30 Minuten über homeassistant.update_entity aktualisiert. Für den Ladeplan wird der zeitlich früheste zukünftige Termin aus allen ausgewählten Kalendern verwendet. Bei gleichem Startzeitpunkt entscheidet die Reihenfolge der Auswahl.",
+          "calendar_entity": "Optional: Wähle einen oder mehrere calendar.* Kalender. Alle ausgewählten Kalender werden alle 30 Minuten aktualisiert. Für den normalen Ladeplan wird der früheste zukünftige Termin verwendet. Ab 03:00 Uhr greift zusätzlich der Fallback: Gibt es heute noch einen zukünftigen Termin und der normale Ladeplan ergibt „Nicht nötig“, wird unabhängig vom SOC ein Ladefenster von 03:00 Uhr bis zum Termin aktiviert.",
           "ziel_ladestand": "Normaler Startwert der Entität „Ziel-Ladestand“. Ein geeigneter Kalendertermin kann den Wert vorübergehend automatisch auf 100 % setzen.",
           "Ziel-Ladestand": "Normaler Startwert der Entität „Ziel-Ladestand“. Ein geeigneter Kalendertermin kann den Wert vorübergehend automatisch auf 100 % setzen.",
           "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand": "Zusätzlicher Sicherheitsaufschlag in Minuten, der nur bei 100 % Ziel-Ladestand addiert wird. Standard: 10 Minuten."

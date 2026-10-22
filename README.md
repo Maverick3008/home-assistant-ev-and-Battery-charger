@@ -1,5 +1,28 @@
 # EV and Battery Charger
 
+## Version 1.5.1 – einfacher 03:00-Uhr-Kalender-Fallback
+
+Version **1.5.1** ergänzt einen bewusst einfachen Sicherheits-Fallback für den Fall, dass der SOC-Wert des Fahrzeugs nicht korrekt aktualisiert wird:
+
+- Ab **03:00 Uhr** wird geprüft, ob **heute noch ein zukünftiger Kalendertermin** vorhanden ist.
+- Ergibt der normale Ladeplan zu diesem Zeitpunkt `not_needed` / **Nicht nötig**, wird der SOC für diesen Fallback ignoriert.
+- Der Ladeplan-Status wird auf **`charging_window` / Ladefenster** gesetzt.
+- `planned_start` wird auf **03:00 Uhr** gesetzt.
+- `planned_end` wird auf den **Start des nächsten Kalendertermins heute** gesetzt.
+- Die angezeigte Ladedauer entspricht in diesem Fall nur dem Zeitfenster von 03:00 Uhr bis zum Termin und wird **nicht aus dem SOC berechnet**.
+- Sobald der Termin beginnt, endet der Fallback automatisch.
+- Gibt es heute keinen zukünftigen Termin oder lautet der normale Status nicht `not_needed`, greift der Fallback nicht.
+
+Damit kann eine bestehende Wallbox-Automation auf `charging_window` reagieren und das Fahrzeug vorsorglich laden, auch wenn der gemeldete SOC fälschlich suggeriert, dass keine Ladung nötig ist.
+
+Zusätzliche Diagnose-Attribute:
+
+```text
+calendar_fallback_active
+calendar_fallback_reason
+calendar_fallback_start
+```
+
 ## Version 1.5.0 – mehrere Kalender
 
 **EV and Battery Charger** ist eine Home-Assistant-Custom-Integration zur Berechnung der Ladedauer, des geplanten Ladestarts und des geplanten Ladeendes für E-Autos, Plug-in-Hybride oder Batteriespeicher.
@@ -106,13 +129,36 @@ Die vorhandene Konfiguration muss nicht gelöscht werden. Ein bislang gespeicher
 
 ## Release
 
-Integrationsversion: **1.5.0**
+Integrationsversion: **1.5.1**
 
-Für HACS sollte nach dem Upload der Dateien ein GitHub-Release/Tag **`1.5.0`** erstellt werden.
+Für HACS sollte nach dem Upload der Dateien ein GitHub-Release/Tag **`1.5.1`** erstellt werden.
 
 ---
 
 # EV and Battery Charger
+
+## Version 1.5.1 – simple 03:00 calendar fallback
+
+Version **1.5.1** adds a deliberately simple safety fallback for cases where the vehicle SOC does not update correctly:
+
+- From **03:00**, the integration checks whether a **future calendar event still exists today**.
+- If the normal plan reports `not_needed`, the SOC is ignored for this fallback.
+- The charge-plan status is changed to **`charging_window`**.
+- `planned_start` is set to **03:00**.
+- `planned_end` is set to the **start of today's next calendar event**.
+- The displayed charge duration represents only the fallback window from 03:00 until the event and is **not calculated from SOC**.
+- The fallback ends automatically when the event starts.
+- If there is no future event today, or the normal status is not `not_needed`, the fallback does not activate.
+
+This allows an existing wallbox automation to react to `charging_window` and start charging even when a stale or incorrect SOC value would otherwise suppress charging.
+
+Additional diagnostic attributes:
+
+```text
+calendar_fallback_active
+calendar_fallback_reason
+calendar_fallback_start
+```
 
 ## Version 1.5.0 – multiple calendars
 
@@ -218,6 +264,6 @@ You do not need to remove the existing configuration. A previously stored single
 
 ## Release
 
-Integration version: **1.5.0**
+Integration version: **1.5.1**
 
-For HACS, create a GitHub release/tag **`1.5.0`** after uploading the files.
+For HACS, create a GitHub release/tag **`1.5.1`** after uploading the files.

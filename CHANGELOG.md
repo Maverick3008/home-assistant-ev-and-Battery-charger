@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.1
+- Added a simple **03:00 calendar fallback** for stale or incorrect vehicle SOC values.
+- From 03:00 onward, when a future calendar event still exists later on the same day and the normal charging plan reports `not_needed`, the integration now exposes `charging_window` regardless of SOC.
+- During the fallback, `planned_start` is fixed to 03:00 and `planned_end` is the start time of today's selected calendar event.
+- The fallback charge duration represents the complete 03:00-to-event window and is intentionally not calculated from SOC.
+- The fallback ends automatically when the calendar event starts.
+- Added diagnostic attributes `calendar_fallback_active`, `calendar_fallback_reason`, and `calendar_fallback_start`.
+- Kept the multi-calendar behavior introduced in 1.5.0 unchanged.
+- Updated manifest, translations, documentation, and release metadata to **1.5.1**.
+
 ## 1.5.0
 - Added support for selecting **multiple Home Assistant calendar entities** in the config/options flow.
 - Existing single-calendar configurations are migrated transparently and remain compatible.

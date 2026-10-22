@@ -92,6 +92,9 @@ class ChargeCalculation:
     minutes_until_start: int
     minutes_until_end: int
     charging_window_locked: bool
+    calendar_fallback_active: bool
+    calendar_fallback_reason: str | None
+    calendar_fallback_start: datetime | None
     locked_duration_minutes: int | None
     locked_charge_started_at: datetime | None
     locked_charge_finished_at: datetime | None
@@ -711,8 +714,58 @@ class EVAndBatteryChargerCalculator:
         else:
             status = "late"
 
+        # Version 1.5.1 simple calendar fallback:
+        # If the normal plan says "not_needed" after 03:00 but there is still
+        # a future calendar event later today, expose an active charging window
+        # anyway. The SOC value is deliberately ignored for this fallback.
+        #
+        # This lets a wallbox automation start charging even when the vehicle's
+        # SOC entity is stale or incorrectly reports that no charging is needed.
+        # The fallback window starts at 03:00 and remains active until the
+        # selected calendar event begins. The displayed duration represents
+        # this fallback window, not an SOC-based charging-time calculation.
+        calendar_fallback_active = False
+        calendar_fallback_reason: str | None = None
+        calendar_fallback_start: datetime | None = None
+
+        today_fallback_start = datetime.combine(
+            now.date(), time(3, 0)
+        ).replace(tzinfo=now.tzinfo)
+
+        if (
+            status == "not_needed"
+            and calendar_ready_by is not None
+            and calendar_ready_by.date() == now.date()
+            and today_fallback_start <= now < calendar_ready_by
+        ):
+            calendar_fallback_active = True
+            calendar_fallback_reason = (
+                "future_event_today_and_not_needed_after_03_00"
+            )
+            calendar_fallback_start = today_fallback_start
+
+            # Make the fallback visible through the existing plan entities so
+            # existing automations can react to "charging_window".
+            target_source = TARGET_SOURCE_CALENDAR
+            ready_by = calendar_ready_by
+            planned_start = today_fallback_start
+            planned_end = calendar_ready_by
+
+            fallback_window_minutes = max(
+                1,
+                ceil(
+                    (planned_end - planned_start).total_seconds() / 60
+                ),
+            )
+            duration_minutes = fallback_window_minutes
+            exact_duration_minutes = float(fallback_window_minutes)
+            full_charge_extra_minutes = 0
+            status = "charging_window"
+            charging_window_locked = False
+
         if charge_cycle_completed_now or (
-            duration_minutes == 0
+            not calendar_fallback_active
+            and duration_minutes == 0
             and current_soc >= CALENDAR_AUTO_TARGET_SOC
             and calendar_event_signature is not None
         ):
@@ -746,6 +799,9 @@ class EVAndBatteryChargerCalculator:
             minutes_until_start=minutes_until_start,
             minutes_until_end=minutes_until_end,
             charging_window_locked=charging_window_locked,
+            calendar_fallback_active=calendar_fallback_active,
+            calendar_fallback_reason=calendar_fallback_reason,
+            calendar_fallback_start=calendar_fallback_start,
             locked_duration_minutes=self._locked_duration_minutes,
             locked_charge_started_at=self._locked_charge_started_at,
             locked_charge_finished_at=self._locked_charge_finished_at,
@@ -885,6 +941,13 @@ class EVAndBatteryChargerSensor(SensorEntity):
             "energy_needed_kwh": calculation.energy_needed_kwh,
             "status": calculation.status,
             "charging_window_locked": calculation.charging_window_locked,
+            "calendar_fallback_active": calculation.calendar_fallback_active,
+            "calendar_fallback_reason": calculation.calendar_fallback_reason,
+            "calendar_fallback_start": (
+                calculation.calendar_fallback_start.isoformat()
+                if calculation.calendar_fallback_start
+                else None
+            ),
             "locked_duration_minutes": calculation.locked_duration_minutes,
             "locked_charge_started_at": (
                 calculation.locked_charge_started_at.isoformat()

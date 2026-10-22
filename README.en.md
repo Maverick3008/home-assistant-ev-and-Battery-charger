@@ -1,5 +1,28 @@
 # EV and Battery Charger
 
+## Version 1.5.1 – simple 03:00 calendar fallback
+
+Version **1.5.1** adds a deliberately simple safety fallback for cases where the vehicle SOC does not update correctly:
+
+- From **03:00**, the integration checks whether a **future calendar event still exists today**.
+- If the normal plan reports `not_needed`, the SOC is ignored for this fallback.
+- The charge-plan status is changed to **`charging_window`**.
+- `planned_start` is set to **03:00**.
+- `planned_end` is set to the **start of today's next calendar event**.
+- The displayed charge duration represents only the fallback window from 03:00 until the event and is **not calculated from SOC**.
+- The fallback ends automatically when the event starts.
+- If there is no future event today, or the normal status is not `not_needed`, the fallback does not activate.
+
+This allows an existing wallbox automation to react to `charging_window` and start charging even when a stale or incorrect SOC value would otherwise suppress charging.
+
+Additional diagnostic attributes:
+
+```text
+calendar_fallback_active
+calendar_fallback_reason
+calendar_fallback_start
+```
+
 ## Version 1.5.0 – multiple calendars
 
 **EV and Battery Charger** is a Home Assistant custom integration that calculates charging duration, planned charging start, and planned charging end for EVs, plug-in hybrids, or battery storage systems.
@@ -104,6 +127,6 @@ You do not need to remove the existing configuration. A previously stored single
 
 ## Release
 
-Integration version: **1.5.0**
+Integration version: **1.5.1**
 
-For HACS, create a GitHub release/tag **`1.5.0`** after uploading the files.
+For HACS, create a GitHub release/tag **`1.5.1`** after uploading the files.
