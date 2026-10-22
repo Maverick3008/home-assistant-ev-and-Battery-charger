@@ -1,43 +1,57 @@
 # EV and Battery Charger
 
-### Hinweis zu Version 1.4.1
+## Version 1.5.0 – mehrere Kalender
 
-Der automatische Ziel-Ladestand wird jetzt nur noch auf **100 %** gesetzt, wenn der vom ausgewählten Kalender bereitgestellte Termin **morgen** stattfindet **und die heutige konfigurierte tägliche Fertig-Uhrzeit bereits erreicht wurde**. Ein Termin übermorgen oder später bleibt für die Ladeplanung sichtbar, löst die 100-%-Automatik aber noch nicht aus.
+**EV and Battery Charger** ist eine Home-Assistant-Custom-Integration zur Berechnung der Ladedauer, des geplanten Ladestarts und des geplanten Ladeendes für E-Autos, Plug-in-Hybride oder Batteriespeicher.
 
-Dadurch bleibt zum Beispiel bei einer täglichen Fertig-Uhrzeit von `05:00` zwischen `00:00` und `04:59` weiterhin der normale Ziel-Ladestand (z. B. **80 %**) aktiv, selbst wenn morgen ein Termin ansteht. Erst ab `05:00` darf dieser morgige Termin automatisch auf **100 %** umschalten.
+Ab **Version 1.5.0** können im Config Flow **mehrere Home-Assistant-Kalender** ausgewählt werden. Die Integration prüft alle ausgewählten Kalender und verwendet für die Ladeplanung den **zeitlich frühesten zukünftigen Termin**.
 
-Hat ein morgiger Termin die 100 % bereits aktiviert, bleibt dieser Ziel-Ladestand für denselben Termin auch **nach Mitternacht** aktiv, bis der zugehörige Ladezyklus abgeschlossen ist. Danach wird der Ziel-Ladestand wie bisher automatisch wieder auf **80 %** gesetzt.
+### Verhalten bei mehreren Kalendern
 
-Die **ausgewählte Kalender-Entität wird weiterhin alle 30 Minuten** über `homeassistant.update_entity` aktualisiert. Das ist besonders für **Remote Calendar** sinnvoll, da diese Home-Assistant-Integration standardmäßig deutlich seltener aktualisiert.
+- Im Config Flow können mehrere `calendar.*`-Entitäten ausgewählt werden.
+- Alle ausgewählten Kalender werden alle **30 Minuten** über `homeassistant.update_entity` aktualisiert.
+- Aus allen Kalendern wird der **früheste zukünftige Termin** verwendet.
+- Bei zwei Terminen mit identischer Startzeit entscheidet die Reihenfolge der ausgewählten Kalender.
+- Bestehende Installationen mit nur einem Kalender bleiben kompatibel; der bisher gespeicherte Einzelwert wird automatisch als Liste behandelt.
+- Das Sensorattribut `calendar_entities` zeigt alle ausgewählten Kalender.
+- Das bestehende Attribut `calendar_entity` zeigt weiterhin den Kalender, aus dem der aktuell verwendete Termin stammt.
 
-**EV and Battery Charger** ist eine Home-Assistant-Custom-Integration zur Berechnung der Ladedauer, des geplanten Ladestarts und des geplanten Ladeendes für ein E-Auto, Plug-in-Hybrid-Fahrzeug oder einen Batteriespeicher.
+## Kalender- und Ziel-Ladestand-Logik
 
-Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder optional den **nächsten Termin aus einem Home-Assistant-Kalender** verwenden. Im Config Flow kannst du festlegen, ob **Kalendertermin zuerst** gelten soll oder ob die **Nacht-Uhrzeit bevorzugt** wird, wobei ein früherer Kalendertermin automatisch Vorrang erhält. Das geplante Ladeende liegt weiterhin um den konfigurierten Puffer davor, zum Beispiel 30 Minuten.
+Die bestehende Logik aus Version 1.4.1 bleibt erhalten:
+
+- Ein geeigneter Termin **morgen** darf den Ziel-Ladestand erst auf **100 %** setzen, nachdem die heutige konfigurierte tägliche Fertig-Uhrzeit erreicht wurde.
+- Termine übermorgen oder später lösen noch keine 100-%-Umschaltung aus.
+- Ein bereits aktivierter Termin behält 100 % auch nach Mitternacht bis zum Abschluss des zugehörigen Ladezyklus.
+- Danach wird der Ziel-Ladestand automatisch wieder auf **80 %** gesetzt.
+- Bei 100 % kann ein konfigurierbarer Sicherheitsaufschlag zur Ladedauer addiert werden.
+
+## Ladeziel-Priorität
+
+Du kannst zwischen zwei Varianten wählen:
+
+**Kalendertermin zuerst**
+: Der früheste zukünftige Termin aus allen ausgewählten Kalendern wird als Ladeziel verwendet. Ist kein zukünftiger Termin vorhanden, wird die tägliche Fertig-Uhrzeit verwendet.
+
+**Nacht-Uhrzeit bevorzugt (frühere Termine zuerst)**
+: Normalerweise wird die tägliche Fertig-Uhrzeit verwendet. Liegt der früheste Kalendertermin davor, übernimmt dieser automatisch das Ladeziel.
 
 ## Funktionen
 
-- Berechnung der benötigten Ladedauer in Minuten
-- Berechnung der benötigten Energie in kWh
-- Berechnung des geplanten Ladestarts
-- Berechnung des geplanten Ladeendes mit Puffer
-- Optional: Ladeplanung anhand des nächsten Home-Assistant-Kalendertermins
-- Auswahl der Ladeziel-Logik: Kalendertermin zuerst oder Nacht-Uhrzeit bevorzugt
-- Bei Nacht-Uhrzeit bevorzugt: ein früherer zukünftiger Kalendertermin überschreibt automatisch die Nachtladung
-- Ein späterer Kalendertermin verschiebt die normale Nachtladung nicht
-- Fallback auf tägliche Fertig-Uhrzeit, wenn Kalender zuerst gewählt ist und kein Kalendertermin verfügbar ist
-- Eigene Zahl-Entität für den Ziel-Ladestand (`number.*`)
-- **Kalendertermin morgen** + heutige tägliche Fertig-Uhrzeit bereits erreicht → Ziel-Ladestand automatisch `100 %`
-- Kalendertermin morgen, aber heutige Fertig-Uhrzeit noch nicht erreicht → normaler Ziel-Ladestand bleibt bestehen
-- Kalendertermin **übermorgen oder später** → noch keine automatische Änderung auf `100 %`
-- Ein bereits aktivierter Termin behält `100 %` auch nach Mitternacht bis zum Abschluss des Ladezyklus
-- Nach abgeschlossener kalenderbezogener Ladung → Ziel-Ladestand automatisch zurück auf `80 %`
-- Ausgewählte Kalender-Entität wird automatisch alle `30 Minuten` aktualisiert
-- Bei Ziel-Ladestand 100 % wird ein konfigurierbarer Sicherheitsaufschlag zur Ladedauer addiert
-- Aktueller Akkustand direkt im Config Flow auswählbar
+- Benötigte Ladedauer in Minuten
+- Benötigte Energie in kWh
+- Geplanter Ladestart
+- Geplantes Ladeende mit Puffer
+- Eigene Zahl-Entität für den Ziel-Ladestand
+- Mehrere optionale Kalender
+- Frühesten zukünftigen Termin kalenderübergreifend bestimmen
+- Automatische Aktualisierung der ausgewählten Kalender alle 30 Minuten
+- Automatische 100-%-/80-%-Kalenderlogik
+- Feste Ladedauer nach Start eines Ladefensters
 - Deutsche und englische Übersetzungen
-- Icon, Logo und Brand-Dateien enthalten
+- HACS-Unterstützung
 
-## Beispielwerte für Cupra Leon e-Hybrid
+## Beispielwerte Cupra Leon e-Hybrid
 
 | Einstellung | Beispiel |
 |---|---:|
@@ -45,7 +59,7 @@ Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder op
 | Ladeleistung | `10.5` kW |
 | Ladeeffizienz | `0.93` |
 | Puffer | `30` Minuten |
-| Zusätzliche Ladezeit bei 100 % Ziel-Ladestand | `10` Minuten |
+| Zusätzliche Ladezeit bei 100 % | `10` Minuten |
 
 ## Berechnung
 
@@ -53,148 +67,45 @@ Die Integration kann mit einer festen täglichen Fertig-Uhrzeit arbeiten oder op
 soc_diff = target_soc - current_soc
 kwh_needed = (soc_diff / 100) * battery_size_kwh / efficiency
 duration_minutes = ceil((kwh_needed / charge_power_kw) * 60)
+
 if target_soc >= 100 and duration_minutes > 0:
-    duration_minutes = duration_minutes + full_charge_extra_minutes
+    duration_minutes += full_charge_extra_minutes
+
 planned_end = ready_by - buffer_minutes
 planned_start = planned_end - duration_minutes
 ```
-
-## Kalender-Funktion
-
-Optional kann im Config Flow ein Kalender angegeben werden, zum Beispiel:
-
-```text
-calendar.cupra_ladung
-```
-
-### Automatischer Kalender-Abruf und Ziel-Ladestand
-
-Nur die in dieser Integration ausgewählte Kalender-Entität wird automatisch alle 30 Minuten mit `homeassistant.update_entity` aktualisiert. Es werden nicht pauschal alle Kalender in Home Assistant abgefragt.
-
-Ab Version **1.4.1** gilt für die automatische 100-%-Umschaltung:
-
-- Termin ist **morgen**, aber die heutige tägliche Fertig-Uhrzeit ist **noch nicht erreicht** → Ziel-Ladestand bleibt unverändert.
-- Termin ist **morgen** und die heutige tägliche Fertig-Uhrzeit ist **erreicht oder überschritten** → Ziel-Ladestand wird automatisch auf **100 %** gesetzt.
-- Termin ist **übermorgen oder später** → Ziel-Ladestand bleibt unverändert.
-- Ein Termin, der bereits 100 % aktiviert hat, behält diesen Zielwert nach Mitternacht für denselben Termin bei.
-- Nach dem Ende des zugehörigen gesperrten Ladefensters wird der Ziel-Ladestand auf **80 %** zurückgesetzt.
-- Derselbe bereits abgearbeitete Termin kann nicht unmittelbar erneut 100 % auslösen.
-- Wird ein noch nicht abgearbeiteter aktiver Termin entfernt, wird ebenfalls auf 80 % zurückgesetzt.
-
-**Beispiel:** Die tägliche Fertig-Uhrzeit ist `05:00` und der nächste Kalendertermin ist am Samstag. Am Freitag um `00:01` bleibt der normale Ziel-Ladestand (z. B. 80 %) aktiv. Erst ab Freitag `05:00` darf der Termin für Samstag den Ziel-Ladestand auf 100 % setzen. Damit wird die normale Ladung für Freitagmorgen nicht versehentlich schon auf 100 % ausgelegt.
-
-Ein Termin am Sonntag oder später löst am Freitag weiterhin keine 100-%-Umschaltung aus.
-
-Diese 100-%-Logik ist unabhängig davon, ob der Termin aufgrund der gewählten Ladeziel-Priorität tatsächlich der aktive `ready_by`-Zeitpunkt wird. Die konfigurierte tägliche Fertig-Uhrzeit dient dabei als Übergabepunkt zur 100-%-Planung für den Folgetag.
-
-Zusätzlich wählst du im Config Flow die Priorität:
-
-```text
-Kalendertermin zuerst
-```
-
-oder:
-
-```text
-Nacht-Uhrzeit bevorzugt (frühere Termine zuerst)
-```
-
-Bei `Kalendertermin zuerst` verwendet die Integration den nächsten Kalendertermin als Ziel-Zeitpunkt, sofern dessen Startzeit noch in der Zukunft liegt.
-
-Bei `Nacht-Uhrzeit bevorzugt (frühere Termine zuerst)` ist die tägliche Fertig-Uhrzeit das normale Ladeziel. Liegt der nächste zukünftige Kalendertermin jedoch **früher** als diese tägliche Fertig-Uhrzeit, wird stattdessen der Kalendertermin verwendet. Liegt der Kalendertermin später, bleibt die Nacht-Uhrzeit aktiv.
-
-Beispiel mit `Kalendertermin zuerst`:
-
-- Termin im Kalender: `Morgen 08:00 Uhr`
-- Puffer: `30 Minuten`
-- Benötigte Ladedauer: `90 Minuten`
-
-Ergebnis:
-
-```text
-Ladeziel Zeitpunkt: Morgen 08:00 Uhr
-Geplantes Ladeende: Morgen 07:30 Uhr
-Geplanter Ladestart: Morgen 06:00 Uhr
-```
-
-Bei `Nacht-Uhrzeit bevorzugt (frühere Termine zuerst)` gilt:
-
-- Kalendertermin **vor** der nächsten Nacht-Uhrzeit → Kalendertermin wird Ladeziel.
-- Kalendertermin **nach** der nächsten Nacht-Uhrzeit → Nacht-Uhrzeit bleibt Ladeziel.
-- Kein gültiger zukünftiger Kalendertermin → Nacht-Uhrzeit bleibt Ladeziel.
-
-Hinweis: Die Integration nutzt die nächsten Kalendertermin-Attribute der Kalender-Entität (`message`, `start_time`, `end_time`). Für sehr komplexe Kalender mit mehreren parallelen Terminen ist die Kalender-Automation von Home Assistant oft flexibler.
 
 ## Entstehende Sensoren
 
 | Sensor | Bedeutung |
 |---|---|
 | Benötigte Ladedauer | Ladedauer in Minuten |
-| Ladeziel Zeitpunkt | Verwendeter Ziel-Zeitpunkt, entweder tägliche Uhrzeit oder Kalendertermin |
-| Geplanter Ladestart | Zeitpunkt, zu dem die Ladung starten sollte |
-| Geplantes Ladeende | Zeitpunkt, zu dem die Ladung vor dem Puffer enden sollte |
+| Ladeziel Zeitpunkt | Verwendeter Ziel-Zeitpunkt |
+| Geplanter Ladestart | Geplanter Start der Ladung |
+| Geplantes Ladeende | Geplantes Ende vor dem Puffer |
 | Benötigte Energie | Geschätzte Energie in kWh |
-| Nächster Kalendertermin Start | Startzeit des nächsten Kalendertermins, falls verfügbar |
-| Nächster Kalendertermin | Titel des nächsten Kalendertermins, falls verfügbar |
+| Nächster Kalendertermin Start | Start des frühesten Kalendertermins |
+| Nächster Kalendertermin | Titel des frühesten Kalendertermins |
 | Ladeziel Quelle | `daily_time` oder `calendar` |
-| Ladeziel Priorität | `Kalendertermin zuerst` oder `Nacht-Uhrzeit bevorzugt (frühere Termine zuerst)` |
+| Ladeziel Priorität | Gewählte Prioritätslogik |
 | Ladeplan Status | `not_needed`, `waiting`, `charging_window` oder `late` |
 
-Zusätzlich wird eine Zahl-Entität erstellt:
-
-| Entität | Bedeutung |
-|---|---|
-| Ziel-Ladestand | Ziel-SOC in Prozent, den du direkt in Home Assistant ändern kannst |
-
-### Sicherheitsaufschlag bei 100 %
-
-Wenn der Ziel-Ladestand auf **100 %** steht und tatsächlich noch geladen werden muss, addiert die Integration den im Config Flow eingestellten Sicherheitsaufschlag zur berechneten Ladedauer. Die Einstellung heißt **Zusätzliche Ladezeit bei 100 % Ziel-Ladestand**. Standardwert: **10 Minuten**.
-
-### Feste Ladedauer im laufenden Ladefenster
-
-Sobald das Ladefenster einmal erreicht wurde, wird die zu diesem Zeitpunkt berechnete **Benötigte Ladedauer** eingefroren. Während des laufenden Ladefensters wird die Dauer nicht mehr durch steigenden SOC neu berechnet oder verkürzt.
-
-Der Status bleibt für genau diese eingefrorene Ladedauer auf `charging_window`. Danach wechselt der Status für dieses Ladeziel direkt auf `not_needed`.
-
-Zusätzliche Diagnose-Attribute:
-
-```text
-locked_duration_minutes
-locked_charge_started_at
-locked_charge_finished_at
-```
+Zusätzlich wird die Zahl-Entität **Ziel-Ladestand** erstellt.
 
 ## Installation
 
-1. Kopiere den Ordner `custom_components/ev_and_battery_charger` nach Home Assistant.
-2. Starte Home Assistant neu.
-3. Gehe zu **Einstellungen → Geräte & Dienste → Integration hinzufügen**.
-4. Suche nach **EV and Battery Charger**.
-5. Wähle den aktuellen Ladestand, optional den Kalender und trage deine Ladeparameter inklusive **Zusätzliche Ladezeit bei 100 % Ziel-Ladestand** ein.
-6. Danach kannst du den Ziel-Ladestand über die Entität **Ziel-Ladestand** ändern.
+1. Den Ordner `custom_components/ev_and_battery_charger` nach Home Assistant kopieren oder die Integration über HACS installieren.
+2. Home Assistant neu starten.
+3. **Einstellungen → Geräte & Dienste → Integration hinzufügen**.
+4. **EV and Battery Charger** auswählen.
+5. SOC-Sensor, tägliche Fertig-Uhrzeit, Ladeparameter und optional mehrere Kalender auswählen.
 
-## Beispiel-Automation zum Laden
+## Update von 1.4.1
 
-Die Integration schaltet dein Ladegerät nicht automatisch. Dafür kannst du eine Home-Assistant-Automation verwenden, die auf den Sensoren basiert.
+Die vorhandene Konfiguration muss nicht gelöscht werden. Ein bislang gespeicherter einzelner Kalender wird von 1.5.0 automatisch weiterverwendet. Öffnest du anschließend die Optionen der Integration, kannst du weitere Kalender ergänzen.
 
-```yaml
-alias: Cupra nach Ladeplan laden
-mode: single
-triggers:
-  - trigger: time
-    at: sensor.cupra_leon_geplanter_ladestart
-conditions:
-  - condition: numeric_state
-    entity_id: sensor.cupra_leon_benoetigte_ladedauer
-    above: 0
-actions:
-  - action: select.select_option
-    target:
-      entity_id: select.myenergi_zappi_24278485_charge_mode
-    data:
-      option: Fast
-```
+## Release
 
-Stoppen kannst du entsprechend mit dem Sensor für das geplante Ladeende.
+Integrationsversion: **1.5.0**
 
-Version: 1.4.1
+Für HACS sollte nach dem Upload der Dateien ein GitHub-Release/Tag **`1.5.0`** erstellt werden.

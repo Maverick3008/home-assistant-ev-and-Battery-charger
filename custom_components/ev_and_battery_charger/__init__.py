@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
+from typing import Any
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -23,6 +24,25 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER]
 
 
+def _calendar_entities(value: Any) -> list[str]:
+    """Normalize a legacy single calendar or a multi-select value to a list."""
+    if value in (None, ""):
+        return []
+    if isinstance(value, str):
+        values = [value]
+    elif isinstance(value, (list, tuple, set)):
+        values = list(value)
+    else:
+        return []
+
+    result: list[str] = []
+    for item in values:
+        entity_id = str(item or "").strip()
+        if entity_id and entity_id not in result:
+            result.append(entity_id)
+    return result
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up EV and Battery Charger from a config entry."""
     configured_target_soc = entry.options.get(
@@ -37,34 +57,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Remote Calendar polls only every 24 hours by default. Refresh the calendar
-    # selected for this charger every 30 minutes so newly added events become
-    # visible to the charging plan much sooner. The standard update_entity
-    # action also works with other calendar integrations that support updates.
-    async def _async_refresh_calendar(_now: datetime | None = None) -> None:
+    # Remote Calendar polls only every 24 hours by default. Refresh every
+    # calendar selected for this charger every 30 minutes so newly added events
+    # become visible to the charging plan much sooner. Refresh calendars one by
+    # one so a failing calendar does not block updates for the others.
+    async def _async_refresh_calendars(_now: datetime | None = None) -> None:
         config = {**entry.data, **entry.options}
-        calendar_entity = str(config.get(CONF_CALENDAR_ENTITY, "") or "").strip()
-        if not calendar_entity or hass.states.get(calendar_entity) is None:
-            return
+        calendar_entities = _calendar_entities(
+            config.get(CONF_CALENDAR_ENTITY, "")
+        )
 
-        try:
-            await hass.services.async_call(
-                "homeassistant",
-                "update_entity",
-                {"entity_id": calendar_entity},
-                blocking=True,
-            )
-        except Exception:  # Home Assistant must keep running if one refresh fails.
-            _LOGGER.exception("Failed to refresh calendar entity %s", calendar_entity)
+        for calendar_entity in calendar_entities:
+            if hass.states.get(calendar_entity) is None:
+                continue
+            try:
+                await hass.services.async_call(
+                    "homeassistant",
+                    "update_entity",
+                    {"entity_id": calendar_entity},
+                    blocking=True,
+                )
+            except Exception:  # Home Assistant must keep running if one refresh fails.
+                _LOGGER.exception(
+                    "Failed to refresh calendar entity %s", calendar_entity
+                )
 
     entry.async_on_unload(
         async_track_time_interval(
             hass,
-            _async_refresh_calendar,
+            _async_refresh_calendars,
             timedelta(minutes=CALENDAR_REFRESH_INTERVAL_MINUTES),
         )
     )
-    hass.async_create_task(_async_refresh_calendar())
+    hass.async_create_task(_async_refresh_calendars())
 
     # On Home Assistant versions without OptionsFlowWithReload we still need a
     # listener to reload the integration after options change. Newer versions

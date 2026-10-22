@@ -36,9 +36,8 @@ from .const import (
     TARGET_SOURCE_PRIORITY_OPTIONS,
 )
 
-# UI-only key for the initial target SOC field.
-# Keeping this separate from the stored key avoids Home Assistant showing the raw
-# technical key "target_soc" in some frontend versions for number selectors.
+# UI-only keys. Keeping these separate from the stored keys avoids Home
+# Assistant showing the raw technical key in some frontend versions.
 FLOW_TARGET_SOC = "Ziel-Ladestand"
 FLOW_FULL_CHARGE_EXTRA_MINUTES = "Zusätzliche Ladezeit bei 100 % Ziel-Ladestand"
 
@@ -61,8 +60,30 @@ def _soc_entity_selector() -> selector.EntitySelector:
 
 
 def _calendar_entity_selector() -> selector.EntitySelector:
-    """Return selector for a Home Assistant calendar entity."""
-    return selector.EntitySelector(selector.EntitySelectorConfig(domain="calendar"))
+    """Return selector for one or more Home Assistant calendar entities."""
+    return selector.EntitySelector(
+        selector.EntitySelectorConfig(domain="calendar", multiple=True)
+    )
+
+
+def _calendar_entities(value: Any) -> list[str]:
+    """Normalize a legacy single calendar or a multi-select value to a list."""
+    if value in (None, ""):
+        return []
+
+    if isinstance(value, str):
+        values = [value]
+    elif isinstance(value, (list, tuple, set)):
+        values = list(value)
+    else:
+        return []
+
+    result: list[str] = []
+    for item in values:
+        entity_id = str(item or "").strip()
+        if entity_id and entity_id not in result:
+            result.append(entity_id)
+    return result
 
 
 def _target_soc_selector() -> selector.NumberSelector:
@@ -94,7 +115,10 @@ def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
         {
             vol.Required(
                 FLOW_TARGET_SOC,
-                default=defaults.get(FLOW_TARGET_SOC, defaults.get(CONF_TARGET_SOC, DEFAULT_TARGET_SOC)),
+                default=defaults.get(
+                    FLOW_TARGET_SOC,
+                    defaults.get(CONF_TARGET_SOC, DEFAULT_TARGET_SOC),
+                ),
             ): _target_soc_selector(),
             vol.Required(
                 CONF_TARGET_TIME,
@@ -102,7 +126,9 @@ def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
             ): selector.TimeSelector(),
             vol.Required(
                 CONF_TARGET_SOURCE_PRIORITY,
-                default=defaults.get(CONF_TARGET_SOURCE_PRIORITY, DEFAULT_TARGET_SOURCE_PRIORITY),
+                default=defaults.get(
+                    CONF_TARGET_SOURCE_PRIORITY, DEFAULT_TARGET_SOURCE_PRIORITY
+                ),
             ): _target_priority_selector(),
             vol.Required(
                 CONF_BATTERY_SIZE_KWH,
@@ -133,13 +159,18 @@ def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
         }
     )
 
-    calendar_default = defaults.get(CONF_CALENDAR_ENTITY, DEFAULT_CALENDAR_ENTITY)
+    calendar_default = _calendar_entities(
+        defaults.get(CONF_CALENDAR_ENTITY, DEFAULT_CALENDAR_ENTITY)
+    )
     if calendar_default:
-        schema[vol.Optional(CONF_CALENDAR_ENTITY, default=calendar_default)] = _calendar_entity_selector()
+        schema[vol.Optional(CONF_CALENDAR_ENTITY, default=calendar_default)] = (
+            _calendar_entity_selector()
+        )
     else:
         schema[vol.Optional(CONF_CALENDAR_ENTITY)] = _calendar_entity_selector()
 
     return vol.Schema(schema)
+
 
 def _as_float(user_input: dict[str, Any], key: str) -> float | None:
     """Return a float from user input, or None if conversion fails."""
@@ -222,9 +253,21 @@ def _validate_input(user_input: dict[str, Any]) -> dict[str, str]:
     elif not (0 <= target_soc <= 100):
         errors[target_soc_key] = "invalid_target_soc"
 
-    calendar_entity = str(user_input.get(CONF_CALENDAR_ENTITY, "") or "").strip()
-    if calendar_entity and not calendar_entity.startswith("calendar."):
-        errors[CONF_CALENDAR_ENTITY] = "invalid_calendar_entity"
+    raw_calendars = user_input.get(CONF_CALENDAR_ENTITY, "")
+    if raw_calendars not in (None, "", []):
+        if isinstance(raw_calendars, str):
+            calendar_values = [raw_calendars]
+        elif isinstance(raw_calendars, (list, tuple, set)):
+            calendar_values = list(raw_calendars)
+        else:
+            calendar_values = []
+            errors[CONF_CALENDAR_ENTITY] = "invalid_calendar_entity"
+
+        if any(
+            not str(value or "").strip().startswith("calendar.")
+            for value in calendar_values
+        ):
+            errors[CONF_CALENDAR_ENTITY] = "invalid_calendar_entity"
 
     if not _validate_time(user_input.get(CONF_TARGET_TIME, "")):
         errors[CONF_TARGET_TIME] = "invalid_time"
@@ -261,7 +304,9 @@ def _validate_input(user_input: dict[str, Any]) -> dict[str, str]:
 
     full_charge_extra_minutes_key = _full_charge_extra_minutes_field(user_input)
     try:
-        full_charge_extra_minutes = int(float(_full_charge_extra_minutes_value(user_input)))
+        full_charge_extra_minutes = int(
+            float(_full_charge_extra_minutes_value(user_input))
+        )
     except (TypeError, ValueError):
         full_charge_extra_minutes = None
     if full_charge_extra_minutes is None:
@@ -291,19 +336,28 @@ def _normalize_input(user_input: dict[str, Any]) -> dict[str, Any]:
     normalized = dict(user_input)
     normalized[CONF_NAME] = str(normalized.get(CONF_NAME, "")).strip()
     normalized[CONF_SOC_SENSOR] = str(normalized.get(CONF_SOC_SENSOR, "")).strip()
-    normalized[CONF_TARGET_SOC] = float(_target_soc_value(normalized) or DEFAULT_TARGET_SOC)
+    normalized[CONF_TARGET_SOC] = float(
+        _target_soc_value(normalized) or DEFAULT_TARGET_SOC
+    )
     normalized.pop(FLOW_TARGET_SOC, None)
-    normalized[CONF_TARGET_TIME] = _normalize_time(normalized.get(CONF_TARGET_TIME, DEFAULT_TARGET_TIME))
+    normalized[CONF_TARGET_TIME] = _normalize_time(
+        normalized.get(CONF_TARGET_TIME, DEFAULT_TARGET_TIME)
+    )
     normalized[CONF_TARGET_SOURCE_PRIORITY] = str(
         normalized.get(CONF_TARGET_SOURCE_PRIORITY, DEFAULT_TARGET_SOURCE_PRIORITY)
     ).strip()
-    normalized[CONF_CALENDAR_ENTITY] = str(normalized.get(CONF_CALENDAR_ENTITY, "") or "").strip()
+    normalized[CONF_CALENDAR_ENTITY] = _calendar_entities(
+        normalized.get(CONF_CALENDAR_ENTITY, DEFAULT_CALENDAR_ENTITY)
+    )
     normalized[CONF_BATTERY_SIZE_KWH] = float(normalized[CONF_BATTERY_SIZE_KWH])
     normalized[CONF_CHARGE_POWER_KW] = float(normalized[CONF_CHARGE_POWER_KW])
     normalized[CONF_EFFICIENCY] = float(normalized[CONF_EFFICIENCY])
     normalized[CONF_BUFFER_MINUTES] = int(float(normalized[CONF_BUFFER_MINUTES]))
     normalized[CONF_FULL_CHARGE_EXTRA_MINUTES] = int(
-        float(_full_charge_extra_minutes_value(normalized) or DEFAULT_FULL_CHARGE_EXTRA_MINUTES)
+        float(
+            _full_charge_extra_minutes_value(normalized)
+            or DEFAULT_FULL_CHARGE_EXTRA_MINUTES
+        )
     )
     normalized.pop(FLOW_FULL_CHARGE_EXTRA_MINUTES, None)
     return normalized
@@ -313,18 +367,25 @@ def _migrate_defaults(defaults: dict[str, Any]) -> dict[str, Any]:
     """Return defaults compatible with older config entries."""
     migrated = dict(defaults)
     migrated.setdefault(CONF_TARGET_SOC, DEFAULT_TARGET_SOC)
-    migrated.setdefault(CONF_FULL_CHARGE_EXTRA_MINUTES, DEFAULT_FULL_CHARGE_EXTRA_MINUTES)
+    migrated.setdefault(
+        CONF_FULL_CHARGE_EXTRA_MINUTES, DEFAULT_FULL_CHARGE_EXTRA_MINUTES
+    )
+    migrated[CONF_CALENDAR_ENTITY] = _calendar_entities(
+        migrated.get(CONF_CALENDAR_ENTITY, DEFAULT_CALENDAR_ENTITY)
+    )
     return migrated
 
 
-_OPTIONS_FLOW_BASE = getattr(config_entries, "OptionsFlowWithReload", config_entries.OptionsFlow)
+_OPTIONS_FLOW_BASE = getattr(
+    config_entries, "OptionsFlowWithReload", config_entries.OptionsFlow
+)
 
 
 class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for EV and Battery Charger."""
 
     VERSION = 1
-    MINOR_VERSION = 16
+    MINOR_VERSION = 17
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -338,7 +399,9 @@ class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input = _normalize_input(user_input)
                 await self.async_set_unique_id(slugify(user_input[CONF_NAME]))
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -358,7 +421,9 @@ class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors = _validate_input(user_input)
             if not errors:
                 user_input = _normalize_input(user_input)
-                await self.async_set_unique_id(entry.unique_id or slugify(user_input[CONF_NAME]))
+                await self.async_set_unique_id(
+                    entry.unique_id or slugify(user_input[CONF_NAME])
+                )
                 self._abort_if_unique_id_mismatch()
                 if hasattr(self, "async_update_reload_and_abort"):
                     return self.async_update_reload_and_abort(
@@ -386,7 +451,7 @@ class EVAndBatteryChargerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> EVAndBatteryChargerOptionsFlow:
+    ) -> "EVAndBatteryChargerOptionsFlow":
         """Create the options flow."""
         return EVAndBatteryChargerOptionsFlow()
 
@@ -406,7 +471,9 @@ class EVAndBatteryChargerOptionsFlow(_OPTIONS_FLOW_BASE):
                 user_input = _normalize_input(user_input)
                 return self.async_create_entry(title="", data=user_input)
 
-        current = _migrate_defaults({**self.config_entry.data, **self.config_entry.options})
+        current = _migrate_defaults(
+            {**self.config_entry.data, **self.config_entry.options}
+        )
         return self.async_show_form(
             step_id="init",
             data_schema=_build_schema(_migrate_defaults(user_input or current)),

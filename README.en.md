@@ -1,43 +1,55 @@
 # EV and Battery Charger
 
-### Note for version 1.4.1
+## Version 1.5.0 – multiple calendars
 
-The automatic target state of charge is now raised to **100% only when the selected calendar event starts tomorrow and today's configured daily ready-by time has already been reached**. An event two or more days away remains available to the charging planner but does not trigger the 100% automation yet.
+**EV and Battery Charger** is a Home Assistant custom integration that calculates charging duration, planned charging start, and planned charging end for EVs, plug-in hybrids, or battery storage systems.
 
-For example, with a daily ready-by time of `05:00`, the normal target SOC (for example **80%**) remains active from `00:00` through `04:59` even when an event is scheduled for tomorrow. That tomorrow-event may raise the target to **100%** only from `05:00` onward.
+Starting with **version 1.5.0**, the config flow supports **multiple Home Assistant calendars**. The integration checks all selected calendars and uses the **earliest future event** for the charging plan.
 
-Once a tomorrow-event has activated 100%, that target remains active for the same event **after midnight** until its associated charging cycle has completed. The target is then automatically reset to **80%**, as before.
+### Multiple-calendar behavior
 
-The **selected calendar entity is still refreshed every 30 minutes** using `homeassistant.update_entity`. This is particularly useful with Home Assistant's **Remote Calendar** integration.
+- Select multiple `calendar.*` entities in the config flow.
+- All selected calendars are refreshed every **30 minutes** using `homeassistant.update_entity`.
+- The **earliest future event** across all selected calendars is used.
+- If two events have the same start time, calendar selection order wins.
+- Existing installations with a single calendar remain compatible; the stored single value is automatically treated as a list.
+- The sensor attribute `calendar_entities` contains all selected calendars.
+- The existing `calendar_entity` attribute identifies the calendar providing the currently selected event.
 
-**EV and Battery Charger** is a Home Assistant custom integration that calculates charging duration, planned charging start and planned charging end for an electric vehicle, plug-in hybrid or battery storage system.
+## Calendar and target-SOC logic
 
-The integration can use a fixed daily ready-by time or optionally use the **next event from a Home Assistant calendar**. The config flow lets you choose either **Calendar event first** or **Prefer daily overnight time**, where an earlier calendar event automatically takes precedence. The planned charging end is placed before the selected ready-by time by the configured buffer, for example 30 minutes.
+The behavior introduced in version 1.4.1 remains unchanged:
+
+- An eligible event **tomorrow** can raise the target SOC to **100%** only after today's configured daily ready time has been reached.
+- Events two or more days away do not raise the target SOC yet.
+- Once activated, the same event keeps the 100% target across midnight until its associated charging cycle completes.
+- After completion, the target SOC is reset automatically to **80%**.
+- A configurable safety extension can be added when charging to 100%.
+
+## Target priority
+
+**Calendar event first**
+: Uses the earliest future event across all selected calendars. If none is available, the daily ready time is used.
+
+**Prefer daily overnight time (earlier events first)**
+: Normally uses the daily ready time. If the earliest calendar event happens sooner, that event automatically becomes the target.
 
 ## Features
 
-- Calculates required charging duration in minutes
-- Calculates required energy in kWh
-- Calculates planned charging start
-- Calculates planned charging end with buffer
-- Optional: charging plan based on the next Home Assistant calendar event
-- Charging target logic: calendar event first or prefer daily overnight time
-- With preferred overnight charging, an earlier future calendar event automatically overrides the overnight target
-- A later calendar event does not postpone the normal overnight charge
-- Falls back to the daily ready-by time when calendar first is selected and no calendar event is available
-- Dedicated target state of charge number entity (`number.*`)
-- **Calendar event tomorrow** + today's daily ready-by time already reached → target SOC automatically set to `100%`
-- Calendar event tomorrow, but today's ready-by time has not been reached yet → normal target SOC remains active
-- Calendar event **two or more days away** → no automatic 100% change yet
-- An already activated event keeps `100%` after midnight until the related charge cycle completes
-- After the related charge cycle completes → target automatically reset to `80%`
-- Selected calendar entity is refreshed automatically every `30 minutes`
-- Adds a configurable safety extension when the target state of charge is 100%
-- Current state of charge through a sensor entity
+- Required charging duration in minutes
+- Required energy in kWh
+- Planned charging start
+- Planned charging end with buffer
+- Dedicated target-SOC number entity
+- Multiple optional calendars
+- Earliest future event across all selected calendars
+- Automatic 30-minute calendar refresh
+- Automatic 100% / 80% calendar target behavior
+- Locked charging duration once a charging window starts
 - German and English translations
-- Icon, logo and brand files included
+- HACS support
 
-## Example values for Cupra Leon e-Hybrid
+## Example values – Cupra Leon e-Hybrid
 
 | Setting | Example |
 |---|---:|
@@ -45,7 +57,7 @@ The integration can use a fixed daily ready-by time or optionally use the **next
 | Charging power | `10.5` kW |
 | Charging efficiency | `0.93` |
 | Buffer | `30` minutes |
-| Extra charging time at 100% target state of charge | `10` minutes |
+| Extra charging time at 100% | `10` minutes |
 
 ## Calculation
 
@@ -53,148 +65,45 @@ The integration can use a fixed daily ready-by time or optionally use the **next
 soc_diff = target_soc - current_soc
 kwh_needed = (soc_diff / 100) * battery_size_kwh / efficiency
 duration_minutes = ceil((kwh_needed / charge_power_kw) * 60)
+
 if target_soc >= 100 and duration_minutes > 0:
-    duration_minutes = duration_minutes + full_charge_extra_minutes
+    duration_minutes += full_charge_extra_minutes
+
 planned_end = ready_by - buffer_minutes
 planned_start = planned_end - duration_minutes
 ```
 
-## Calendar feature
-
-Optionally, enter a calendar in the config flow, for example:
-
-```text
-calendar.cupra_charging
-```
-
-### Automatic calendar refresh and target SOC
-
-Only the calendar entity selected in this integration is refreshed every 30 minutes through `homeassistant.update_entity`. The integration does not refresh every calendar in Home Assistant.
-
-Starting with version **1.4.1**, the automatic 100% behavior is:
-
-- Event starts **tomorrow**, but today's daily ready-by time has **not been reached yet** → target SOC remains unchanged.
-- Event starts **tomorrow** and today's daily ready-by time has **been reached or passed** → target SOC is automatically raised to **100%**.
-- Event starts **two or more days from now** → target SOC remains unchanged.
-- Once an event has activated 100%, the same event keeps that target after midnight.
-- After the associated locked charging window finishes, the target SOC is reset to **80%**.
-- The same completed event cannot immediately trigger 100% again.
-- If an active, uncompleted event is removed, the target is also reset to 80%.
-
-**Example:** The daily ready-by time is `05:00` and the next calendar event is on Saturday. At `00:01` on Friday, the normal target SOC (for example 80%) remains active. Only from `05:00` on Friday may the Saturday event raise the target SOC to 100%. This prevents the normal Friday-morning charge from being planned to 100% one night too early.
-
-An event on Sunday or later still does not trigger 100% on Friday.
-
-This automatic 100% behavior is independent of whether the calendar event becomes the active `ready_by` source under the selected target priority. The configured daily ready-by time acts as the handover point for the next day's 100% planning.
-
-In the config flow, choose the priority:
-
-```text
-Calendar event first
-```
-
-or:
-
-```text
-Prefer daily overnight time (earlier events first)
-```
-
-With `Calendar event first`, the integration uses the next calendar event as the target ready-by time only if its start time is still in the future.
-
-With `Prefer daily overnight time (earlier events first)`, the daily ready time is the normal target. However, if the next future calendar event occurs **earlier** than that daily ready time, the calendar event is used instead. If the calendar event is later, the daily overnight target remains active.
-
-Example with `Calendar event first`:
-
-- Calendar event: `Tomorrow 08:00`
-- Buffer: `30 minutes`
-- Required charging duration: `90 minutes`
-
-Result:
-
-```text
-Target ready time: Tomorrow 08:00
-Planned charge end: Tomorrow 07:30
-Planned charge start: Tomorrow 06:00
-```
-
-With `Prefer daily overnight time (earlier events first)`:
-
-- Calendar event **before** the next overnight target → the calendar event becomes the charging target.
-- Calendar event **after** the next overnight target → the overnight target stays active.
-- No valid future calendar event → the overnight target stays active.
-
-Note: The integration uses the next-event attributes of the calendar entity (`message`, `start_time`, `end_time`). For complex calendars with multiple overlapping events, Home Assistant calendar automations may be more flexible.
-
-## Created sensors
+## Sensors
 
 | Sensor | Meaning |
 |---|---|
 | Required charge duration | Charging duration in minutes |
-| Target ready time | Active target time, either daily time or calendar event |
-| Planned charge start | Time when charging should start |
-| Planned charge end | Time when charging should end before the buffer |
+| Target ready time | Ready-by time used by the planner |
+| Planned charge start | Planned charging start |
+| Planned charge end | Planned charging end before the buffer |
 | Energy needed | Estimated energy in kWh |
-| Next calendar event start | Start time of the next calendar event, if available |
-| Next calendar event | Title of the next calendar event, if available |
+| Next calendar event start | Start of the earliest calendar event |
+| Next calendar event | Title of the earliest calendar event |
 | Target source | `daily_time` or `calendar` |
-| Target source priority | `Calendar event first` or `Prefer daily overnight time (earlier events first)` |
-| Charge plan status | `not_needed`, `waiting`, `charging_window` or `late` |
+| Target source priority | Selected priority logic |
+| Charge plan status | `not_needed`, `waiting`, `charging_window`, or `late` |
 
-A number entity is also created:
-
-| Entity | Meaning |
-|---|---|
-| Target state of charge | Target SOC in percent that you can change directly in Home Assistant |
-
-### 100% full-charge safety extension
-
-If the target state of charge is set to **100%** and charging is actually required, the integration adds the safety extension configured in the config flow to the calculated charging duration. The default is **10 minutes**.
-
-### Fixed charging duration during an active charging window
-
-Once the charging window has been reached, the **required charge duration** calculated at that moment is frozen. During the active charging window, the duration is no longer recalculated or shortened by rising SOC values.
-
-The status stays on `charging_window` for exactly this frozen duration. After that duration has elapsed, the status changes directly to `not_needed` for the current charge target.
-
-Additional diagnostic attributes:
-
-```text
-locked_duration_minutes
-locked_charge_started_at
-locked_charge_finished_at
-```
+A **Target state of charge** number entity is also created.
 
 ## Installation
 
-1. Copy the folder `custom_components/ev_and_battery_charger` to Home Assistant.
+1. Copy `custom_components/ev_and_battery_charger` to Home Assistant or install through HACS.
 2. Restart Home Assistant.
 3. Go to **Settings → Devices & services → Add integration**.
-4. Search for **EV and Battery Charger**.
-5. Select the current state of charge entity, optionally select a calendar, and enter your charging parameters.
-6. Afterwards, change the target SOC through the **Target state of charge** number entity.
+4. Select **EV and Battery Charger**.
+5. Configure the SOC sensor, daily ready time, charging parameters, and optionally multiple calendars.
 
-## Example charging automation
+## Updating from 1.4.1
 
-The integration does not switch your charger automatically. Use a Home Assistant automation based on the sensors.
+You do not need to remove the existing configuration. A previously stored single calendar is automatically reused by 1.5.0. Open the integration options afterwards to add more calendars.
 
-```yaml
-alias: Charge Cupra by charging plan
-mode: single
-triggers:
-  - trigger: time
-    at: sensor.cupra_leon_planned_charge_start
-conditions:
-  - condition: numeric_state
-    entity_id: sensor.cupra_leon_required_charge_duration
-    above: 0
-actions:
-  - action: select.select_option
-    target:
-      entity_id: select.myenergi_zappi_24278485_charge_mode
-    data:
-      option: Fast
-```
+## Release
 
-You can stop charging in the same way using the planned charge end sensor.
+Integration version: **1.5.0**
 
-Version: 1.4.1
+For HACS, create a GitHub release/tag **`1.5.0`** after uploading the files.

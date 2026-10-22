@@ -75,6 +75,7 @@ class ChargeCalculation:
     target_time: str
     target_source: str
     target_source_priority: str
+    calendar_entities: tuple[str, ...]
     calendar_entity: str | None
     calendar_event_title: str | None
     calendar_event_start: datetime | None
@@ -218,6 +219,25 @@ class EVAndBatteryChargerCalculator:
 
         return {**self.entry.data, **self.entry.options}
 
+    @staticmethod
+    def _calendar_entities(value: Any) -> list[str]:
+        """Normalize a legacy single calendar or a multi-select value to a list."""
+        if value in (None, ""):
+            return []
+        if isinstance(value, str):
+            values = [value]
+        elif isinstance(value, (list, tuple, set)):
+            values = list(value)
+        else:
+            return []
+
+        result: list[str] = []
+        for item in values:
+            entity_id = str(item or "").strip()
+            if entity_id and entity_id not in result:
+                result.append(entity_id)
+        return result
+
     def _get_float_state(self, entity_id: str) -> float | None:
         """Return an entity state as float."""
 
@@ -230,13 +250,7 @@ class EVAndBatteryChargerCalculator:
             return None
 
     def _get_target_soc(self) -> float | None:
-        """Return the configured target SOC.
-
-        Version 1.0.11 adds an internal number entity for the target SOC. Older
-        entries may still contain a target_soc_entity from previous releases;
-        that value is used only as a migration fallback until the number entity
-        has restored or stored its own value.
-        """
+        """Return the configured target SOC."""
 
         entry_data = self.hass.data.get(DOMAIN, {}).get(self.entry.entry_id, {})
         if isinstance(entry_data, dict) and "target_soc" in entry_data:
@@ -286,7 +300,7 @@ class EVAndBatteryChargerCalculator:
     def _calendar_event_signature(
         calendar_entity: str, calendar_details: dict[str, Any]
     ) -> str | None:
-        """Return a stable signature for the currently exposed future event."""
+        """Return a stable signature for the selected future event."""
 
         event_start = calendar_details.get("calendar_event_start")
         if not calendar_entity or not isinstance(event_start, datetime):
@@ -307,19 +321,7 @@ class EVAndBatteryChargerCalculator:
         event_signature: str | None,
         event_can_activate_target: bool,
     ) -> None:
-        """Apply the automatic calendar target SOC.
-
-        A new calendar event may raise the target SOC to 100% only when the
-        event starts tomorrow and today's configured daily ready-by time has
-        already been reached. This prevents the normal charge for the current
-        morning from using the next day's 100% target too early.
-
-        Once an event has activated the 100% target, it remains active for that
-        same event after midnight until its associated charging cycle completes.
-        This prevents the target from falling back to 80% in the middle of an
-        overnight charge merely because the event changed from "tomorrow" to
-        "today".
-        """
+        """Apply the automatic calendar target SOC."""
 
         entry_data = self.hass.data.setdefault(DOMAIN, {}).setdefault(
             self.entry.entry_id, {}
@@ -334,9 +336,6 @@ class EVAndBatteryChargerCalculator:
             if active_event is not None:
                 entry_data["calendar_target_event"] = None
                 self._set_runtime_target_soc(CALENDAR_RESET_TARGET_SOC)
-
-            # Once the completed event disappears from the calendar entity, a
-            # later event may become eligible when it reaches "tomorrow".
             entry_data["calendar_completed_event"] = None
             return
 
@@ -344,13 +343,10 @@ class EVAndBatteryChargerCalculator:
             entry_data["calendar_target_event"] = None
             return
 
-        # Keep the already activated event at 100%, including after midnight.
         if event_signature == active_event:
             self._set_runtime_target_soc(CALENDAR_AUTO_TARGET_SOC)
             return
 
-        # The calendar now exposes another event. If a previous uncompleted
-        # event had activated 100%, release that automatic target first.
         if active_event is not None:
             entry_data["calendar_target_event"] = None
             self._set_runtime_target_soc(CALENDAR_RESET_TARGET_SOC)
@@ -358,8 +354,6 @@ class EVAndBatteryChargerCalculator:
         if completed_event is not None and event_signature != completed_event:
             entry_data["calendar_completed_event"] = None
 
-        # Version 1.4.1: a new event may activate 100% only after today's
-        # normal daily ready-by time has passed and the event is tomorrow.
         if not event_can_activate_target:
             return
 
@@ -419,44 +413,41 @@ class EVAndBatteryChargerCalculator:
             return parsed.replace(tzinfo=now.tzinfo)
         return dt_util.as_local(parsed)
 
+    @staticmethod
+    def _empty_calendar_details() -> dict[str, Any]:
+        """Return empty calendar details."""
+        return {
+            "calendar_entity": None,
+            "calendar_event_title": None,
+            "calendar_event_start": None,
+            "calendar_event_end": None,
+            "calendar_event_all_day": None,
+        }
+
     def _get_calendar_ready_by(
         self, calendar_entity: str, now: datetime
     ) -> tuple[datetime | None, dict[str, Any]]:
-        """Return ready-by datetime from the configured calendar entity."""
+        """Return ready-by datetime from one configured calendar entity."""
 
         if not calendar_entity:
-            return None, {
-                "calendar_entity": None,
-                "calendar_event_title": None,
-                "calendar_event_start": None,
-                "calendar_event_end": None,
-                "calendar_event_all_day": None,
-            }
+            return None, self._empty_calendar_details()
 
         state = self.hass.states.get(calendar_entity)
         if state is None:
             return None, {
+                **self._empty_calendar_details(),
                 "calendar_entity": calendar_entity,
-                "calendar_event_title": None,
-                "calendar_event_start": None,
-                "calendar_event_end": None,
-                "calendar_event_all_day": None,
             }
 
         attrs = state.attributes
         event_start = self._parse_datetime(attrs.get("start_time"), now)
 
-        # A calendar entity can continue exposing the currently running event.
-        # Its start_time is then already in the past and must no longer be used
-        # as a future ready-by target. Returning no event also activates the
-        # configured daily ready-time fallback when calendar priority is used.
+        # A calendar entity may expose a currently running event. Its start is
+        # already in the past, so it must not become a future ready-by target.
         if event_start is None or event_start <= now:
             return None, {
+                **self._empty_calendar_details(),
                 "calendar_entity": calendar_entity,
-                "calendar_event_title": None,
-                "calendar_event_start": None,
-                "calendar_event_end": None,
-                "calendar_event_all_day": None,
             }
 
         event_end = self._parse_datetime(attrs.get("end_time"), now)
@@ -470,6 +461,28 @@ class EVAndBatteryChargerCalculator:
             "calendar_event_end": event_end,
             "calendar_event_all_day": event_all_day,
         }
+
+    def _get_next_calendar_ready_by(
+        self, calendar_entities: list[str], now: datetime
+    ) -> tuple[datetime | None, dict[str, Any]]:
+        """Return the earliest future event from all configured calendars.
+
+        When two calendars expose events with the same start time, the calendar
+        that appears first in the configured list wins.
+        """
+
+        best_ready_by: datetime | None = None
+        best_details = self._empty_calendar_details()
+
+        for calendar_entity in calendar_entities:
+            ready_by, details = self._get_calendar_ready_by(calendar_entity, now)
+            if ready_by is None:
+                continue
+            if best_ready_by is None or ready_by < best_ready_by:
+                best_ready_by = ready_by
+                best_details = details
+
+        return best_ready_by, best_details
 
     def _get_daily_ready_by(
         self, target_time_value: str | time, now: datetime
@@ -516,26 +529,23 @@ class EVAndBatteryChargerCalculator:
         ):
             target_source_priority = DEFAULT_TARGET_SOURCE_PRIORITY
 
-        calendar_entity = str(config.get(CONF_CALENDAR_ENTITY, "")).strip()
+        calendar_entities = self._calendar_entities(
+            config.get(CONF_CALENDAR_ENTITY, "")
+        )
         now = dt_util.now()
         daily_ready_by = self._get_daily_ready_by(target_time_value, now)
-        calendar_ready_by, calendar_details = self._get_calendar_ready_by(
-            calendar_entity, now
+        calendar_ready_by, calendar_details = self._get_next_calendar_ready_by(
+            calendar_entities, now
         )
+        active_calendar_entity = str(
+            calendar_details.get("calendar_entity") or ""
+        ).strip()
         calendar_event_signature = self._calendar_event_signature(
-            calendar_entity, calendar_details
+            active_calendar_entity, calendar_details
         )
 
-        # Version 1.4.1: a calendar event may newly activate the automatic
-        # 100% target only if it starts tomorrow AND today's normal daily
-        # ready-by time has already been reached.
-        #
-        # Example with a daily ready-by time of 05:00 and an event on Saturday:
-        # Friday 00:01-04:59 -> keep the normal target (for example 80%).
-        # Friday from 05:00   -> the Saturday event may activate 100%.
-        #
-        # Once activated, the same event remains at 100% across midnight until
-        # its associated charging cycle completes.
+        # A calendar event may newly activate the automatic 100% target only if
+        # it starts tomorrow AND today's normal daily ready-by time has passed.
         tomorrow = now.date() + timedelta(days=1)
         calendar_event_is_tomorrow = (
             calendar_ready_by is not None
@@ -557,10 +567,6 @@ class EVAndBatteryChargerCalculator:
             return None
 
         if target_source_priority == TARGET_PRIORITY_DAILY_TIME_FIRST:
-            # The daily ready time remains the normal overnight target, but an
-            # earlier upcoming calendar event must win so the vehicle is ready
-            # before that appointment. A later calendar event does not postpone
-            # the regular overnight charging target.
             if (
                 calendar_ready_by is not None
                 and calendar_ready_by < daily_ready_by
@@ -626,16 +632,11 @@ class EVAndBatteryChargerCalculator:
 
         planned_start = planned_end - timedelta(minutes=duration_minutes)
 
-        # Once the charge window has started, freeze the initially calculated
-        # duration and wait exactly that runtime. While the window is active, SOC
-        # changes must not shorten the remaining duration and must not move the
-        # planned start/end times. After the frozen duration has elapsed, this
-        # charge cycle is marked as completed and reports "not_needed" until the
-        # target signature changes, for example because the next daily ready time
-        # or the next calendar event changes.
+        # Freeze the initially calculated window once charging starts. This keeps
+        # a rising SOC from shortening an already active charging cycle.
         charge_window_signature = (
             f"{target_source}|{ready_by.isoformat()}|{target_soc}|"
-            f"{target_source_priority}|{calendar_entity}"
+            f"{target_source_priority}|{active_calendar_entity}"
         )
         if self._charge_window_signature != charge_window_signature:
             self._active_charge_window = False
@@ -733,6 +734,7 @@ class EVAndBatteryChargerCalculator:
             target_time=str(target_time_value),
             target_source=target_source,
             target_source_priority=target_source_priority,
+            calendar_entities=tuple(calendar_entities),
             ready_by=ready_by,
             planned_end=planned_end,
             planned_start=planned_start,
@@ -787,9 +789,13 @@ class EVAndBatteryChargerSensor(SensorEntity):
         if legacy_target_entity:
             watched_entities.append(legacy_target_entity)
 
-        calendar_entity = str(config.get(CONF_CALENDAR_ENTITY, "")).strip()
-        if calendar_entity:
-            watched_entities.append(calendar_entity)
+        watched_entities.extend(
+            self.calculator._calendar_entities(
+                config.get(CONF_CALENDAR_ENTITY, "")
+            )
+        )
+        # Keep the state-change subscription free of duplicate entity IDs.
+        watched_entities = list(dict.fromkeys(watched_entities))
 
         self.async_on_remove(
             async_track_state_change_event(
@@ -897,6 +903,7 @@ class EVAndBatteryChargerSensor(SensorEntity):
             "legacy_target_soc_entity": self.calculator.config.get(
                 CONF_TARGET_SOC_ENTITY
             ),
+            "calendar_entities": list(calculation.calendar_entities),
             "calendar_entity": calculation.calendar_entity,
             "calendar_event_title": calculation.calendar_event_title,
             "calendar_event_start": (
